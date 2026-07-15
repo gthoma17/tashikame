@@ -1,0 +1,5 @@
+# Strike Trio — track files managed via symlink, excluded from git
+documents/tracks/
+
+# macOS
+.DS_Store
