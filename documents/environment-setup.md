@@ -15,10 +15,10 @@ On `start setup`, Claude reads the table below to brief the current position, an
 | Step | Status | Value / note |
 |------|--------|--------------|
 | 1. Tracker Boot project | ✅ | ID: 100000282 |
-| 2. GitHub repo | ⬜ | |
-| 3. Bot access | ⬜ | |
-| 4. Deploy hosting | ⬜ | |
-| 5. Local wiring | ⬜ | |
+| 2. GitHub repo | ✅ | gthoma17/tashikame |
+| 3. Bot access | ✅ | strike-trio-devbot invited + auto-accepted |
+| 4. Deploy hosting | ✅ | Netlify — tashi-kame |
+| 5. Local wiring | ✅ | Hoge / Piyo — all command files + promote.yml created |
 | 6. Verify (first ready) | ⬜ | |
 
 Status marks: ⬜ not done · 🔄 in progress · ✅ done
@@ -37,11 +37,11 @@ Status marks: ⬜ not done · 🔄 in progress · ✅ done
 *(Claude fills these in as each step is confirmed.)*
 
 - **Tracker Boot Project ID**: `100000282`
-- **GitHub repo**: `(owner/repo)`
-- **Deploy hosting**: `(e.g. Netlify site name)`
-- **Production URL**:
-- **Acceptance URL**:
-- **Preview URL pattern**:
+- **GitHub repo**: `gthoma17/tashikame`
+- **Deploy hosting**: Netlify — `tashi-kame`
+- **Production URL**: `https://tashi-kame.netlify.app`
+- **Acceptance URL**: `https://main--tashi-kame.netlify.app`
+- **Preview URL pattern**: `https://dev-{name}--tashi-kame.netlify.app`
 
 ---
 
