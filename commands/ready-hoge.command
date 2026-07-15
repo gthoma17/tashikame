@@ -45,4 +45,4 @@ fi
 command -v emit_pm_beat >/dev/null 2>&1 && emit_pm_beat assign hoge "$REPO_DIR/.env" "$STORY"
 
 cd "$WORKTREE"
-claude "dev-hoge start"
+claude --dangerously-skip-permissions "dev-hoge start"

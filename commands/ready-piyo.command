@@ -45,4 +45,4 @@ fi
 command -v emit_pm_beat >/dev/null 2>&1 && emit_pm_beat assign piyo "$REPO_DIR/.env" "$STORY"
 
 cd "$WORKTREE"
-claude "dev-piyo start"
+claude --dangerously-skip-permissions "dev-piyo start"
