@@ -10,12 +10,10 @@
 
 ---
 
-## Key Decision ([date]) — [title]
+## Key Decision (2026-07-15) — IPM complete, backlog set, ready to start dev
 
-*(The block below is a format example. Replace it with a real decision.)*
-
-- **Context**: [the event or problem that prompted this decision]
-- **Decision**: [what was decided]
-- **Rejected**: [what was considered but ruled out + why]
-- **Rationale**: [why — context that won't live in the tracker story]
-- **Next candidates**: [1–3 candidate story IDs that come next after this decision + a one-line reason each — the handoff pointer a new session uses to confirm status in the tracker]
+- **Context**: D&F complete + environment setup done. IPM ran on 9 stories (1 Chore + 8 Features, 13 points). Stories registered in Tracker Boot, estimated, labeled, and moved to the backlog in priority order.
+- **Decision**: Start with Chore #200029020 on a single track (hoge), then fork: hoge owns the create side (#200029021–#200029025), piyo owns the conclude side (#200029026–#200029028). Piyo works against a seeded fixture until hoge's `experiments` row lands.
+- **Rejected**: Interleaving create/conclude stories in the backlog — rejected because piyo can't meaningfully start until the Chore and hoge's schema exist. Sequential within-track ordering is cleaner.
+- **Rationale**: The two-track split mirrors the UI split (screens 1–2 = create, screen 3 = conclude) with near-zero file overlap. The Bedrock connector pattern is established in #200029023 (hoge) before #200029024 picks it up — no risk of two Devs building divergent LLM integrations. The threshold override behavior (#200029025) is a logged override (not a hard refusal) — input mistakes can happen. #200029028 (write verdict label, 3pts) is the only e2e story and the seeded critical path; it spills into the next iteration at TB's default velocity of 10.
+- **Next candidates**: #200029020 (Chore — Project scaffold + data spine) is the immediate next story for hoge. Once Accepted, assign #200029021 to hoge and #200029026 to piyo simultaneously.
