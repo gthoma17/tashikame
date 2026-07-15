@@ -1,5 +1,8 @@
 # Strike Trio — track files managed via symlink, excluded from git
 documents/tracks/
 
+# Local env — never commit
+.env
+
 # macOS
 .DS_Store
