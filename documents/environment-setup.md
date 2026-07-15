@@ -19,7 +19,7 @@ On `start setup`, Claude reads the table below to brief the current position, an
 | 3. Bot access | ✅ | strike-trio-devbot invited + auto-accepted |
 | 4. Deploy hosting | ✅ | Netlify — tashi-kame |
 | 5. Local wiring | ✅ | Hoge / Piyo — all command files + promote.yml created |
-| 6. Verify (first ready) | ⬜ | |
+| 6. Verify (first ready) | ✅ | Dev session opened successfully |
 
 Status marks: ⬜ not done · 🔄 in progress · ✅ done
 
