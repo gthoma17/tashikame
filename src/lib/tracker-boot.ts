@@ -1,4 +1,4 @@
-const TB_API_BASE = 'https://api.trackerboot.com/graphql'
+const TB_API_BASE = 'https://trackerboot.com/graphql'
 
 export class TrackerBootClient {
   private token: string
