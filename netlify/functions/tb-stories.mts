@@ -9,7 +9,7 @@ export default async (req: Request) => {
   }
 
   const apiKey = Netlify.env.get('TB_API_KEY')
-  const projectId = '100000282'
+  const projectId = Netlify.env.get('TB_PROJECT_ID') ?? '100000282'
 
   const res = await fetch('https://trackerboot.com/graphql', {
     method: 'POST',
