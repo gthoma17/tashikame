@@ -44,6 +44,23 @@ describe('LabelScopeSelector', () => {
     expect(screen.getByText('User can upload avatar')).toBeInTheDocument()
   })
 
+  it('calls onStoryPick when a story is selected', async () => {
+    const user = userEvent.setup()
+    const onStoryPick = vi.fn()
+    vi.mocked(fetchLabels).mockResolvedValue([{ id: '1', name: 'profile' }])
+    vi.mocked(fetchStoriesByLabel).mockResolvedValue([
+      { id: '101', title: 'User can edit profile' },
+    ])
+
+    render(<LabelScopeSelector onStoryPick={onStoryPick} />, { wrapper: makeWrapper() })
+
+    await screen.findByRole('option', { name: 'profile' })
+    await user.selectOptions(screen.getByRole('combobox'), 'profile')
+    await user.click(await screen.findByRole('radio', { name: 'User can edit profile' }))
+
+    expect(onStoryPick).toHaveBeenCalledWith({ id: '101', title: 'User can edit profile' })
+  })
+
   it('shows empty message when selected label has no stories', async () => {
     const user = userEvent.setup()
     vi.mocked(fetchLabels).mockResolvedValue([{ id: '1', name: 'legacy' }])

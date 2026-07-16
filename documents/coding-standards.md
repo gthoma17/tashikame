@@ -110,3 +110,10 @@ Always write one test at a time, make it run, then improve structure. Always run
 ## End-to-End Tests — not the default
 
 E2E is the thinnest layer, not the baseline. Quality stands on **unit TDD + code review + PM Accept**; E2E sits on top and runs **only on stories that touch a critical path**, once before push (never per commit — it's a long-running test). Over-using E2E is the ice-cream-cone anti-pattern. Whether to add a Gherkin↔code glue layer (e.g. Cucumber) or run the E2E tool standalone is a trade-off the tenant weighs — DRY (the AC's source of truth is the Tracker Boot story) vs. a living executable spec — not something the methodology prescribes. **Full policy (timing · condition · unit · tool) lives in `aabt-workflow.md §5`** — this is a reminder, not the source of truth.
+
+### Tool + how to run (this project)
+
+- **Playwright** is wired up (standalone — no Cucumber glue; Gherkin AC stays as the source of truth in Tracker Boot).
+- Specs live under `e2e/`. Config is `playwright.config.ts` — it builds the app and starts `vite preview` on port 4173 via `webServer`, sourcing `VITE_SUPABASE_*` from `netlify.toml`'s `[build.environment]`.
+- **Command**: `npm run e2e`. Run it **once before push** on any story annotated `e2e: new` / `e2e: regression`. Do not run per commit.
+- Add one spec per critical-path story you touch (name it after the story number or route). The spec asserts the user-visible behavior in the story's Gherkin — not internal detail.
