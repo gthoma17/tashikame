@@ -10,6 +10,15 @@ vi.mock('../lib/supabase', () => ({
   },
 }))
 
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual('@tanstack/react-router')
+  return {
+    ...(actual as object),
+    Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) =>
+      <a {...props}>{children}</a>,
+  }
+})
+
 import { supabase } from '../lib/supabase'
 
 function makeWrapper() {

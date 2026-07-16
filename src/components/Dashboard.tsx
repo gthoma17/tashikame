@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { supabase } from '../lib/supabase'
 import './Dashboard.css'
 
@@ -35,13 +36,17 @@ export function Dashboard() {
     return (
       <div className="dashboard-empty">
         <p>No experiments yet. Create your first experiment to get started.</p>
+        <Link to="/create" className="dashboard-new-btn">New Experiment</Link>
       </div>
     )
   }
 
   return (
     <div className="dashboard">
-      <h1 className="dashboard-title">Experiments</h1>
+      <div className="dashboard-header">
+        <h1 className="dashboard-title">Experiments</h1>
+        <Link to="/create" className="dashboard-new-btn">New Experiment</Link>
+      </div>
       <table className="dashboard-table">
         <thead>
           <tr>

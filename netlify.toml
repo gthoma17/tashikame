@@ -5,6 +5,7 @@
 [build.environment]
   VITE_SUPABASE_URL = "https://resqeunzqmmnjqaefjaw.supabase.co"
   VITE_SUPABASE_ANON_KEY = "sb_publishable_x20M8rbDxQJd2DkBJPwu3w_KQsdTYoc"
+  VITE_TB_PROJECT_ID = "100000282"
 
 [[redirects]]
   from = "/*"

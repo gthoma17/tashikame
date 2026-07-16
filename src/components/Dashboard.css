@@ -86,6 +86,33 @@
   color: var(--color-verdict-invalidated);
 }
 
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.dashboard-header .dashboard-title {
+  margin-bottom: 0;
+}
+
+.dashboard-new-btn {
+  display: inline-block;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-accent);
+  color: #fff;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  margin-top: var(--space-4);
+}
+
+.dashboard-new-btn:hover {
+  opacity: 0.9;
+}
+
 .dashboard-empty {
   max-width: 900px;
   margin: var(--space-8) auto;
