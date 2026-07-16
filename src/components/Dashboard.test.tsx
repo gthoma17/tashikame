@@ -24,6 +24,31 @@ vi.mock('../lib/experiments', async () => {
   return { ...actual, writeVerdictBack: vi.fn() }
 })
 
+vi.mock('@tanstack/react-router', async () => {
+  const actual = await vi.importActual('@tanstack/react-router')
+  return {
+    ...(actual as object),
+    Link: ({
+      children,
+      to,
+      params,
+      ...rest
+    }: {
+      children?: React.ReactNode
+      to?: string
+      params?: Record<string, string>
+    } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+      const href = to && params
+        ? Object.entries(params).reduce(
+            (acc, [k, v]) => acc.replace(`$${k}`, v),
+            to,
+          )
+        : to
+      return <a href={href} {...rest}>{children}</a>
+    },
+  }
+})
+
 import { supabase } from '../lib/supabase'
 import { writeVerdictBack } from '../lib/experiments'
 
@@ -196,6 +221,37 @@ describe('Dashboard', () => {
     fireEvent.click(await screen.findByRole('button', { name: /write back/i }))
 
     expect(await screen.findByText(/written/i)).toBeInTheDocument()
+  })
+
+  it('shows a Conclude action linking to the conclude form for running experiments', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'run-1', hypothesis: 'Running one', status: 'running', locked_threshold: 8, measured_value: null }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    const link = await screen.findByRole('link', { name: /conclude/i })
+    expect(link).toHaveAttribute('href', '/experiments/run-1/conclude')
+  })
+
+  it('does not show a Conclude action on concluded or proposed rows', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [
+          { id: 'draft-1', hypothesis: 'Proposed one', status: 'draft', locked_threshold: null, measured_value: null },
+          { id: 'done-1', hypothesis: 'Concluded one', status: 'concluded', locked_threshold: 8, measured_value: 12 },
+        ],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    await screen.findByText('Proposed one')
+    expect(screen.queryByRole('link', { name: /conclude/i })).not.toBeInTheDocument()
   })
 
   it('shows error and retry button when write-back fails', async () => {

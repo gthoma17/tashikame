@@ -70,6 +70,7 @@ export function Dashboard() {
             <th>Status</th>
             <th>Verdict</th>
             <th>Consequence</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -110,6 +111,17 @@ export function Dashboard() {
                         </button>
                       </>
                     )
+                  )}
+                </td>
+                <td>
+                  {exp.status === 'running' && (
+                    <Link
+                      to="/experiments/$id/conclude"
+                      params={{ id: exp.id }}
+                      className="dashboard-conclude-link"
+                    >
+                      Conclude
+                    </Link>
                   )}
                 </td>
               </tr>
