@@ -178,6 +178,35 @@
   color: var(--color-verdict-inconclusive);
 }
 
+.threshold-override-btn,
+.threshold-save-btn,
+.threshold-cancel-btn {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius);
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.threshold-override-btn:hover,
+.threshold-save-btn:hover,
+.threshold-cancel-btn:hover {
+  background: var(--color-bg);
+}
+
+.threshold-input {
+  width: 4rem;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 .dashboard-conclude-link {
   color: var(--color-accent);
   font-size: 0.85rem;

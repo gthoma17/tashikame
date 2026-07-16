@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { supabase } from '../lib/supabase'
-import { computeVerdict, writeVerdictBack } from '../lib/experiments'
+import { computeVerdict, overrideThreshold, writeVerdictBack } from '../lib/experiments'
 import './Dashboard.css'
 
 type ThresholdOverride = {
@@ -38,11 +38,14 @@ async function fetchExperiments(): Promise<Experiment[]> {
 }
 
 export function Dashboard() {
+  const queryClient = useQueryClient()
   const { data: experiments, isLoading } = useQuery({
     queryKey: ['experiments'],
     queryFn: fetchExperiments,
   })
   const [writeBackStates, setWriteBackStates] = useState<Record<string, WriteBackState>>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingValue, setEditingValue] = useState<string>('')
 
   async function handleWriteBack(experimentId: string) {
     setWriteBackStates((s) => ({ ...s, [experimentId]: 'loading' }))
@@ -52,6 +55,24 @@ export function Dashboard() {
     } catch {
       setWriteBackStates((s) => ({ ...s, [experimentId]: 'error' }))
     }
+  }
+
+  function startEditing(id: string, current: number) {
+    setEditingId(id)
+    setEditingValue(String(current))
+  }
+
+  function cancelEditing() {
+    setEditingId(null)
+    setEditingValue('')
+  }
+
+  async function saveOverride(id: string) {
+    const parsed = Number(editingValue)
+    if (!Number.isFinite(parsed)) return
+    await overrideThreshold(id, parsed)
+    cancelEditing()
+    queryClient.invalidateQueries({ queryKey: ['experiments'] })
   }
 
   if (isLoading) return null
@@ -106,11 +127,39 @@ export function Dashboard() {
                 <td>
                   {exp.locked_threshold != null && (
                     <span className="threshold">
-                      <span className="threshold-value">{exp.locked_threshold}</span>
-                      {latestOverride && (
-                        <span className="threshold-override" title={`Overridden ${overrides.length}×`}>
-                          overridden — was {latestOverride.old_value}
-                        </span>
+                      {editingId === exp.id ? (
+                        <>
+                          <input
+                            type="number"
+                            aria-label="New threshold"
+                            className="threshold-input"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                          />
+                          <button className="threshold-save-btn" onClick={() => saveOverride(exp.id)}>
+                            Save
+                          </button>
+                          <button className="threshold-cancel-btn" onClick={cancelEditing}>
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="threshold-value">{exp.locked_threshold}</span>
+                          {latestOverride && (
+                            <span className="threshold-override" title={`Overridden ${overrides.length}×`}>
+                              overridden — was {latestOverride.old_value}
+                            </span>
+                          )}
+                          {exp.status === 'running' && (
+                            <button
+                              className="threshold-override-btn"
+                              onClick={() => startEditing(exp.id, exp.locked_threshold as number)}
+                            >
+                              Override
+                            </button>
+                          )}
+                        </>
                       )}
                     </span>
                   )}
