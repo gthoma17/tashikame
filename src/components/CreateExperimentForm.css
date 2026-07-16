@@ -21,6 +21,17 @@
   font-weight: 700;
 }
 
+.test-card__attribution {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.test-card__attribution a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .test-card__scope,
 .test-card__hint {
   margin: 0;

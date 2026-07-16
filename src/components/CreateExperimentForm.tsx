@@ -140,6 +140,17 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
     <form className="test-card" onSubmit={handleSubmit}>
       <header className="test-card__header">
         <h2 className="test-card__title">Test Card</h2>
+        <p className="test-card__attribution">
+          This Test Card follows the{' '}
+          <a
+            href="https://labspractices.com/practices/lean-experiments/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Lean Experiments practice
+          </a>{' '}
+          from labspractices.com
+        </p>
         {labelName ? (
           <p className="test-card__scope">
             Scoped to: <strong>{labelName}</strong>
