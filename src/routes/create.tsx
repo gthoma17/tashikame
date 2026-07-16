@@ -4,7 +4,7 @@ import { LabelScopeSelector } from '../components/LabelScopeSelector'
 import { CreateExperimentForm } from '../components/CreateExperimentForm'
 
 export function CreatePage() {
-  const [picked, setPicked] = useState<{ id: string; title: string } | null>(null)
+  const [picked, setPicked] = useState<{ id: string; name: string } | null>(null)
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -15,10 +15,10 @@ export function CreatePage() {
         New Experiment
       </h1>
       <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)', fontSize: '0.9rem' }}>
-        Choose a label to scope this experiment to a feature area, then pick a story.
+        Choose a label (feature area) to scope this experiment. The verdict will be written back to every story under that label.
       </p>
-      <LabelScopeSelector onStoryPick={setPicked} />
-      <CreateExperimentForm storyId={picked?.id ?? null} storyTitle={picked?.title ?? null} />
+      <LabelScopeSelector onLabelPick={setPicked} />
+      <CreateExperimentForm labelId={picked?.id ?? null} labelName={picked?.name ?? null} />
     </div>
   )
 }

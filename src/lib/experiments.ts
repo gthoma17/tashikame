@@ -1,12 +1,12 @@
 import { supabase } from './supabase'
 
 export async function createExperiment(input: {
-  storyId: string
+  labelId: string
   hypothesis: string
   lockedThreshold: number
 }) {
   const { error } = await supabase.from('experiments').insert({
-    story_id: input.storyId,
+    label_id: input.labelId,
     hypothesis: input.hypothesis,
     locked_threshold: input.lockedThreshold,
   })

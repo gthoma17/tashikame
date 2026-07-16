@@ -18,19 +18,19 @@ describe('createExperiment', () => {
     vi.clearAllMocks()
   })
 
-  it('inserts a draft experiment linked to the picked story', async () => {
+  it('inserts a draft experiment scoped to the picked label', async () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     mockFrom.mockReturnValue({ insert: mockInsert })
 
     await createExperiment({
-      storyId: 'story-42',
+      labelId: 'label-7',
       hypothesis: 'Users will save 3 recipes per week',
       lockedThreshold: 3,
     })
 
     expect(mockFrom).toHaveBeenCalledWith('experiments')
     expect(mockInsert).toHaveBeenCalledWith({
-      story_id: 'story-42',
+      label_id: 'label-7',
       hypothesis: 'Users will save 3 recipes per week',
       locked_threshold: 3,
     })
@@ -41,7 +41,7 @@ describe('createExperiment', () => {
     mockFrom.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      createExperiment({ storyId: 's', hypothesis: 'h', lockedThreshold: 1 }),
+      createExperiment({ labelId: 'l', hypothesis: 'h', lockedThreshold: 1 }),
     ).rejects.toThrow('insert failed')
   })
 })
