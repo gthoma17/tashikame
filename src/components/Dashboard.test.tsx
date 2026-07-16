@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
@@ -19,7 +19,13 @@ vi.mock('@tanstack/react-router', async () => {
   }
 })
 
+vi.mock('../lib/experiments', async () => {
+  const actual = await vi.importActual<typeof import('../lib/experiments')>('../lib/experiments')
+  return { ...actual, writeVerdictBack: vi.fn() }
+})
+
 import { supabase } from '../lib/supabase'
+import { writeVerdictBack } from '../lib/experiments'
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -130,5 +136,82 @@ describe('Dashboard', () => {
     expect(
       await screen.findByText(/create your first experiment/i)
     ).toBeInTheDocument()
+  })
+
+  it('shows a write-back button for concluded experiments with a verdict', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: '1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 4.1 }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByRole('button', { name: /write back/i })).toBeInTheDocument()
+  })
+
+  it('does not show a write-back button for non-concluded experiments', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: '1', hypothesis: 'Banner test', status: 'running', locked_threshold: 8, measured_value: null }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    await screen.findByText('Banner test')
+    expect(screen.queryByRole('button', { name: /write back/i })).not.toBeInTheDocument()
+  })
+
+  it('calls writeVerdictBack with the experiment id when write-back button is clicked', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'exp-1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 4.1 }],
+        error: null,
+      }),
+    } as any)
+    vi.mocked(writeVerdictBack).mockResolvedValue({ storyId: '200029021', label: 'killed' })
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    const btn = await screen.findByRole('button', { name: /write back/i })
+    fireEvent.click(btn)
+
+    expect(writeVerdictBack).toHaveBeenCalledWith('exp-1')
+  })
+
+  it('shows success state after a successful write-back', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'exp-1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 4.1 }],
+        error: null,
+      }),
+    } as any)
+    vi.mocked(writeVerdictBack).mockResolvedValue({ storyId: '200029021', label: 'killed' })
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    fireEvent.click(await screen.findByRole('button', { name: /write back/i }))
+
+    expect(await screen.findByText(/written/i)).toBeInTheDocument()
+  })
+
+  it('shows error and retry button when write-back fails', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'exp-1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 4.1 }],
+        error: null,
+      }),
+    } as any)
+    vi.mocked(writeVerdictBack).mockRejectedValue(new Error('TB unavailable'))
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    fireEvent.click(await screen.findByRole('button', { name: /write back/i }))
+
+    expect(await screen.findByText(/error/i)).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /retry/i })).toBeInTheDocument()
   })
 })

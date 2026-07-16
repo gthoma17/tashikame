@@ -29,3 +29,17 @@ export function computeVerdict(
   if (measuredValue > lockedThreshold) return 'keep'
   return 'inconclusive'
 }
+
+export function computeVerdictLabel(verdict: 'kill' | 'keep' | 'inconclusive'): string {
+  if (verdict === 'kill') return 'killed'
+  if (verdict === 'keep') return 'kept'
+  return 'inconclusive'
+}
+
+export async function writeVerdictBack(experimentId: string): Promise<{ storyId: string; label: string }> {
+  const { data, error } = await supabase.functions.invoke('write-verdict-back', {
+    body: { experimentId },
+  })
+  if (error) throw error
+  return data as { storyId: string; label: string }
+}

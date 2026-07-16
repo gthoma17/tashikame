@@ -3,6 +3,8 @@ documents/tracks/
 
 # Local env — never commit
 .env
+.env.local
+.env.*.local
 
 # Build output
 dist/
