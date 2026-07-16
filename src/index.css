@@ -8,10 +8,11 @@
 
   --color-status-draft: #6b7280;
   --color-status-running: #2563eb;
-  --color-status-concluded: #059669;
+  --color-status-concluded: #7c3aed;
 
-  --color-verdict-validated: #059669;
-  --color-verdict-invalidated: #dc2626;
+  --color-verdict-kill: #dc2626;
+  --color-verdict-keep: #059669;
+  --color-verdict-inconclusive: #d97706;
 
   --space-1: 4px;
   --space-2: 8px;

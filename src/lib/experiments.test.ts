@@ -7,7 +7,7 @@ vi.mock('./supabase', () => ({
 }))
 
 import { supabase } from './supabase'
-import { concludeExperiment } from './experiments'
+import { concludeExperiment, computeVerdict } from './experiments'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 
@@ -34,5 +34,19 @@ describe('concludeExperiment', () => {
     mockFrom.mockReturnValue({ update: mockUpdate })
 
     await expect(concludeExperiment('exp-123', 42.5)).rejects.toThrow('db error')
+  })
+})
+
+describe('computeVerdict', () => {
+  it('returns kill when measured value is below the locked threshold', () => {
+    expect(computeVerdict(8, 4.1)).toBe('kill')
+  })
+
+  it('returns keep when measured value exceeds the locked threshold', () => {
+    expect(computeVerdict(8, 12)).toBe('keep')
+  })
+
+  it('returns inconclusive when measured value equals the locked threshold exactly', () => {
+    expect(computeVerdict(8, 8)).toBe('inconclusive')
   })
 })
