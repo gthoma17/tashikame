@@ -14,6 +14,14 @@ export async function createExperiment(input: {
   if (error) throw error
 }
 
+export async function overrideThreshold(id: string, newValue: number) {
+  const { error } = await supabase
+    .from('experiments')
+    .update({ locked_threshold: newValue })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function concludeExperiment(id: string, measuredValue: number) {
   const { error } = await supabase
     .from('experiments')

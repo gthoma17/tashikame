@@ -8,7 +8,7 @@ vi.mock('./supabase', () => ({
 }))
 
 import { supabase } from './supabase'
-import { concludeExperiment, computeVerdict, computeVerdictLabel, createExperiment, writeVerdictBack } from './experiments'
+import { concludeExperiment, computeVerdict, computeVerdictLabel, createExperiment, overrideThreshold, writeVerdictBack } from './experiments'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
 const mockInvoke = supabase.functions.invoke as ReturnType<typeof vi.fn>
@@ -70,6 +70,32 @@ describe('concludeExperiment', () => {
     mockFrom.mockReturnValue({ update: mockUpdate })
 
     await expect(concludeExperiment('exp-123', 42.5)).rejects.toThrow('db error')
+  })
+})
+
+describe('overrideThreshold', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('updates locked_threshold on the target experiment', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockFrom.mockReturnValue({ update: mockUpdate })
+
+    await overrideThreshold('exp-123', 12)
+
+    expect(mockFrom).toHaveBeenCalledWith('experiments')
+    expect(mockUpdate).toHaveBeenCalledWith({ locked_threshold: 12 })
+    expect(mockEq).toHaveBeenCalledWith('id', 'exp-123')
+  })
+
+  it('throws when supabase returns an error', async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: new Error('update failed') })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+    mockFrom.mockReturnValue({ update: mockUpdate })
+
+    await expect(overrideThreshold('exp-123', 12)).rejects.toThrow('update failed')
   })
 })
 

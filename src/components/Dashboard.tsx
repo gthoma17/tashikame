@@ -5,12 +5,19 @@ import { supabase } from '../lib/supabase'
 import { computeVerdict, writeVerdictBack } from '../lib/experiments'
 import './Dashboard.css'
 
+type ThresholdOverride = {
+  old_value: number
+  new_value: number
+  created_at: string
+}
+
 type Experiment = {
   id: string
   hypothesis: string
   status: 'running' | 'concluded'
   locked_threshold: number | null
   measured_value: number | null
+  experiment_threshold_overrides: ThresholdOverride[]
 }
 
 type WriteBackState = 'idle' | 'loading' | 'done' | 'error'
@@ -23,7 +30,9 @@ const STATUS_LABEL: Record<string, string> = {
 async function fetchExperiments(): Promise<Experiment[]> {
   const { data, error } = await supabase
     .from('experiments')
-    .select('id, hypothesis, status, locked_threshold, measured_value')
+    .select(
+      'id, hypothesis, status, locked_threshold, measured_value, experiment_threshold_overrides(old_value, new_value, created_at)',
+    )
   if (error) throw error
   return data ?? []
 }
@@ -67,6 +76,7 @@ export function Dashboard() {
           <tr>
             <th>Hypothesis</th>
             <th>Status</th>
+            <th>Threshold</th>
             <th>Verdict</th>
             <th>Consequence</th>
             <th></th>
@@ -81,6 +91,10 @@ export function Dashboard() {
                 ? computeVerdict(exp.locked_threshold, exp.measured_value)
                 : null
             const wbState = writeBackStates[exp.id] ?? 'idle'
+            const overrides = exp.experiment_threshold_overrides ?? []
+            const latestOverride = overrides.length
+              ? overrides.reduce((a, b) => (a.created_at > b.created_at ? a : b))
+              : null
             return (
               <tr key={exp.id}>
                 <td>{exp.hypothesis}</td>
@@ -88,6 +102,18 @@ export function Dashboard() {
                   <span className={`status status--${exp.status}`}>
                     {STATUS_LABEL[exp.status] ?? exp.status}
                   </span>
+                </td>
+                <td>
+                  {exp.locked_threshold != null && (
+                    <span className="threshold">
+                      <span className="threshold-value">{exp.locked_threshold}</span>
+                      {latestOverride && (
+                        <span className="threshold-override" title={`Overridden ${overrides.length}×`}>
+                          overridden — was {latestOverride.old_value}
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </td>
                 <td>
                   {verdict && <span className={`verdict verdict--${verdict}`}>{verdict}</span>}
