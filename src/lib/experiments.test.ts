@@ -105,13 +105,16 @@ describe('writeVerdictBack', () => {
     vi.clearAllMocks()
   })
 
-  it('invokes the write-verdict-back edge function with the experiment id', async () => {
-    mockInvoke.mockResolvedValue({ data: { storyId: '200029021', label: 'killed' }, error: null })
+  it('invokes the edge function and returns the list of labeled story ids', async () => {
+    mockInvoke.mockResolvedValue({
+      data: { storyIds: ['200029021', '200029022', '200029023'], label: 'killed' },
+      error: null,
+    })
 
     const result = await writeVerdictBack('exp-123')
 
     expect(mockInvoke).toHaveBeenCalledWith('write-verdict-back', { body: { experimentId: 'exp-123' } })
-    expect(result).toEqual({ storyId: '200029021', label: 'killed' })
+    expect(result).toEqual({ storyIds: ['200029021', '200029022', '200029023'], label: 'killed' })
   })
 
   it('throws when the edge function returns an error', async () => {

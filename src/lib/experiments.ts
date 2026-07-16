@@ -36,10 +36,10 @@ export function computeVerdictLabel(verdict: 'kill' | 'keep' | 'inconclusive'): 
   return 'inconclusive'
 }
 
-export async function writeVerdictBack(experimentId: string): Promise<{ storyId: string; label: string }> {
+export async function writeVerdictBack(experimentId: string): Promise<{ storyIds: string[]; label: string }> {
   const { data, error } = await supabase.functions.invoke('write-verdict-back', {
     body: { experimentId },
   })
   if (error) throw error
-  return data as { storyId: string; label: string }
+  return data as { storyIds: string[]; label: string }
 }

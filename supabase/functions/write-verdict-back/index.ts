@@ -6,7 +6,6 @@ const CORS = {
 }
 
 const TB_API = 'https://trackerboot.com/graphql'
-const TB_PROJECT_ID = Deno.env.get('TB_PROJECT_ID') ?? '100000282'
 
 function computeVerdict(threshold: number, measured: number): 'kill' | 'keep' | 'inconclusive' {
   if (measured < threshold) return 'kill'
@@ -36,8 +35,15 @@ async function tbRequest<T>(
   return json.data
 }
 
+const STORIES_BY_LABEL = `
+  query StoriesByLabel($projectId: ID!, $labelId: ID!) {
+    stories(projectId: $projectId, labelId: $labelId) { id }
+  }
+`
+
 // Mirrors backend/applications/mcp-app/.../graphql-documents/addStoryLabel.graphql —
-// version: 1 is required (without it, TB returns INTERNAL_ERROR).
+// version: 1 required; type is a hardcoded enum literal; label.id "-1" is the
+// TB sentinel meaning "match by name, create if missing".
 const ADD_STORY_LABEL = `
   mutation AddStoryLabel($projectId: ID!, $commandId: ID!, $parameters: JSON!) {
     executeCommand(input: {
@@ -49,16 +55,25 @@ const ADD_STORY_LABEL = `
     }) {
       version
       type
-      data {
-        __typename
-        ... on Label { id name count }
-      }
     }
   }
 `
 
-async function addLabelToStory(
-  storyId: string,
+async function storiesUnderLabel(
+  labelId: string,
+  projectId: string,
+  token: string,
+): Promise<string[]> {
+  const { stories } = await tbRequest<{ stories: Array<{ id: string }> }>(
+    STORIES_BY_LABEL,
+    { projectId, labelId },
+    token,
+  )
+  return stories.map((s) => s.id)
+}
+
+async function addLabelToStories(
+  storyIds: string[],
   labelName: string,
   projectId: string,
   token: string,
@@ -69,7 +84,7 @@ async function addLabelToStory(
       projectId,
       commandId: crypto.randomUUID(),
       parameters: {
-        storyIds: [storyId],
+        storyIds,
         label: { id: '-1', name: labelName },
       },
     },
@@ -85,6 +100,11 @@ Deno.serve(async (req) => {
   try {
     const { experimentId } = await req.json() as { experimentId: string }
 
+    const projectId = Deno.env.get('TB_PROJECT_ID')
+    if (!projectId) throw new Error('TB_PROJECT_ID not configured')
+    const tbToken = Deno.env.get('TB_API_KEY')
+    if (!tbToken) throw new Error('TB_API_KEY not configured')
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -92,24 +112,28 @@ Deno.serve(async (req) => {
 
     const { data: exp, error: dbErr } = await supabase
       .from('experiments')
-      .select('story_id, locked_threshold, measured_value')
+      .select('label_id, locked_threshold, measured_value')
       .eq('id', experimentId)
       .single()
 
     if (dbErr || !exp) throw new Error(dbErr?.message ?? 'Experiment not found')
-    if (!exp.story_id || exp.locked_threshold == null || exp.measured_value == null) {
-      throw new Error('Experiment is not concluded or missing story_id')
+    if (!exp.label_id || exp.locked_threshold == null || exp.measured_value == null) {
+      throw new Error('Experiment is not concluded or missing scope label')
     }
-
-    const tbToken = Deno.env.get('TB_API_KEY')
-    if (!tbToken) throw new Error('TB_API_KEY not configured')
 
     const verdict = computeVerdict(Number(exp.locked_threshold), Number(exp.measured_value))
     const label = verdictLabel(verdict)
 
-    await addLabelToStory(exp.story_id, label, TB_PROJECT_ID, tbToken)
+    const storyIds = await storiesUnderLabel(exp.label_id, projectId, tbToken)
+    if (storyIds.length === 0) {
+      return new Response(JSON.stringify({ storyIds: [], label }), {
+        headers: { ...CORS, 'Content-Type': 'application/json' },
+      })
+    }
 
-    return new Response(JSON.stringify({ storyId: exp.story_id, label }), {
+    await addLabelToStories(storyIds, label, projectId, tbToken)
+
+    return new Response(JSON.stringify({ storyIds, label }), {
       headers: { ...CORS, 'Content-Type': 'application/json' },
     })
   } catch (err) {

@@ -172,7 +172,7 @@ describe('Dashboard', () => {
         error: null,
       }),
     } as any)
-    vi.mocked(writeVerdictBack).mockResolvedValue({ storyId: '200029021', label: 'killed' })
+    vi.mocked(writeVerdictBack).mockResolvedValue({ storyIds: ['200029021'], label: 'killed' })
 
     render(<Dashboard />, { wrapper: makeWrapper() })
 
@@ -189,7 +189,7 @@ describe('Dashboard', () => {
         error: null,
       }),
     } as any)
-    vi.mocked(writeVerdictBack).mockResolvedValue({ storyId: '200029021', label: 'killed' })
+    vi.mocked(writeVerdictBack).mockResolvedValue({ storyIds: ['200029021'], label: 'killed' })
 
     render(<Dashboard />, { wrapper: makeWrapper() })
 

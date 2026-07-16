@@ -34,7 +34,7 @@ test('successful write-back shows "Written" confirmation', async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ storyId: '200029021', label: 'killed' }),
+      body: JSON.stringify({ storyIds: ['200029021', '200029022'], label: 'killed' }),
     })
   })
 
