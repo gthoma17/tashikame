@@ -1,6 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const TB_API = 'https://api.trackerboot.com/graphql'
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+const TB_API = 'https://trackerboot.com/graphql'
 const TB_PROJECT_ID = Deno.env.get('TB_PROJECT_ID') ?? '100000282'
 
 function computeVerdict(threshold: number, measured: number): 'kill' | 'keep' | 'inconclusive' {
@@ -31,65 +36,41 @@ async function tbRequest<T>(
   return json.data
 }
 
-const LABELS_QUERY = `query Labels($projectId: ID!) { labels(projectId: $projectId) { id name } }`
-
-const EXECUTE_COMMAND = `
-  mutation Cmd($input: CommandInput!) {
-    executeCommand(input: $input) {
+// Mirrors backend/applications/mcp-app/.../graphql-documents/addStoryLabel.graphql —
+// version: 1 is required (without it, TB returns INTERNAL_ERROR).
+const ADD_STORY_LABEL = `
+  mutation AddStoryLabel($projectId: ID!, $commandId: ID!, $parameters: JSON!) {
+    executeCommand(input: {
+      projectId: $projectId
+      version: 1
+      commandId: $commandId
+      type: STORY_MULTI_LABEL_ADD
+      parameters: $parameters
+    }) {
       version
       type
-      data { ... on Label { id name } }
+      data {
+        __typename
+        ... on Label { id name count }
+      }
     }
   }
 `
 
-async function getOrCreateLabel(
-  labelName: string,
-  projectId: string,
-  token: string,
-): Promise<string> {
-  const { labels } = await tbRequest<{ labels: Array<{ id: string; name: string }> }>(
-    LABELS_QUERY,
-    { projectId },
-    token,
-  )
-  const existing = labels.find((l) => l.name === labelName)
-  if (existing) return existing.id
-
-  const result = await tbRequest<{
-    executeCommand: { data: Array<{ id: string; name: string }> }
-  }>(
-    EXECUTE_COMMAND,
-    {
-      input: {
-        projectId,
-        commandId: crypto.randomUUID(),
-        type: 'LABEL_CREATE',
-        parameters: { name: labelName },
-      },
-    },
-    token,
-  )
-  const created = result.executeCommand?.data?.[0]
-  if (!created?.id) throw new Error(`Failed to create label "${labelName}"`)
-  return created.id
-}
-
 async function addLabelToStory(
   storyId: string,
-  labelId: string,
+  labelName: string,
   projectId: string,
   token: string,
 ): Promise<void> {
   await tbRequest(
-    EXECUTE_COMMAND,
+    ADD_STORY_LABEL,
     {
-      input: {
-        projectId,
-        commandId: crypto.randomUUID(),
-        type: 'STORY_MULTI_LABEL_ADD',
-        // parameters shape assumed from TB command convention — verify against TB backend if needed
-        parameters: { storyIds: [storyId], labelId },
+      projectId,
+      commandId: crypto.randomUUID(),
+      parameters: {
+        storyIds: [storyId],
+        label: { id: '-1', name: labelName },
       },
     },
     token,
@@ -97,6 +78,10 @@ async function addLabelToStory(
 }
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS })
+  }
+
   try {
     const { experimentId } = await req.json() as { experimentId: string }
 
@@ -122,17 +107,16 @@ Deno.serve(async (req) => {
     const verdict = computeVerdict(Number(exp.locked_threshold), Number(exp.measured_value))
     const label = verdictLabel(verdict)
 
-    const labelId = await getOrCreateLabel(label, TB_PROJECT_ID, tbToken)
-    await addLabelToStory(exp.story_id, labelId, TB_PROJECT_ID, tbToken)
+    await addLabelToStory(exp.story_id, label, TB_PROJECT_ID, tbToken)
 
     return new Response(JSON.stringify({ storyId: exp.story_id, label }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...CORS, 'Content-Type': 'application/json' },
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...CORS, 'Content-Type': 'application/json' },
     })
   }
 })
