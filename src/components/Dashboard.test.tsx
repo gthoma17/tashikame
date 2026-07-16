@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
@@ -21,7 +21,7 @@ vi.mock('@tanstack/react-router', async () => {
 
 vi.mock('../lib/experiments', async () => {
   const actual = await vi.importActual<typeof import('../lib/experiments')>('../lib/experiments')
-  return { ...actual, writeVerdictBack: vi.fn() }
+  return { ...actual, writeVerdictBack: vi.fn(), overrideThreshold: vi.fn() }
 })
 
 vi.mock('@tanstack/react-router', async () => {
@@ -50,7 +50,7 @@ vi.mock('@tanstack/react-router', async () => {
 })
 
 import { supabase } from '../lib/supabase'
-import { writeVerdictBack } from '../lib/experiments'
+import { writeVerdictBack, overrideThreshold } from '../lib/experiments'
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -322,6 +322,71 @@ describe('Dashboard', () => {
 
     await screen.findByText('Banner test')
     expect(screen.queryByText(/overridden/i)).not.toBeInTheDocument()
+  })
+
+  it('shows an Override button in the Threshold cell for running experiments', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'r1', hypothesis: 'Banner test', status: 'running', locked_threshold: 8, measured_value: null, experiment_threshold_overrides: [] }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByRole('button', { name: /override/i })).toBeInTheDocument()
+  })
+
+  it('does not show an Override button on concluded rows', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'c1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 12, experiment_threshold_overrides: [] }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    await screen.findByText('Banner test')
+    expect(screen.queryByRole('button', { name: /override/i })).not.toBeInTheDocument()
+  })
+
+  it('calls overrideThreshold with the new value when Save is clicked', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'r1', hypothesis: 'Banner test', status: 'running', locked_threshold: 8, measured_value: null, experiment_threshold_overrides: [] }],
+        error: null,
+      }),
+    } as any)
+    vi.mocked(overrideThreshold).mockResolvedValue(undefined)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    fireEvent.click(await screen.findByRole('button', { name: /override/i }))
+    const input = screen.getByRole('spinbutton', { name: /new threshold/i })
+    fireEvent.change(input, { target: { value: '12' } })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    await waitFor(() => expect(overrideThreshold).toHaveBeenCalledWith('r1', 12))
+  })
+
+  it('does not call overrideThreshold when Cancel is clicked', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: 'r1', hypothesis: 'Banner test', status: 'running', locked_threshold: 8, measured_value: null, experiment_threshold_overrides: [] }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    fireEvent.click(await screen.findByRole('button', { name: /override/i }))
+    const input = screen.getByRole('spinbutton', { name: /new threshold/i })
+    fireEvent.change(input, { target: { value: '12' } })
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+
+    expect(overrideThreshold).not.toHaveBeenCalled()
+    expect(screen.queryByRole('spinbutton', { name: /new threshold/i })).not.toBeInTheDocument()
   })
 
   it('shows error and retry button when write-back fails', async () => {
