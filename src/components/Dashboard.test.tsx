@@ -253,6 +253,77 @@ describe('Dashboard', () => {
     expect(screen.queryByRole('link', { name: /conclude/i })).not.toBeInTheDocument()
   })
 
+  it('shows the locked threshold value on each row', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: '1',
+            hypothesis: 'Banner test',
+            status: 'running',
+            locked_threshold: 8,
+            measured_value: null,
+            experiment_threshold_overrides: [],
+          },
+        ],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByText('8')).toBeInTheDocument()
+  })
+
+  it('marks the threshold as overridden when the override log has entries', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: '1',
+            hypothesis: 'Banner test',
+            status: 'running',
+            locked_threshold: 12,
+            measured_value: null,
+            experiment_threshold_overrides: [
+              { old_value: 8, new_value: 12, created_at: '2026-07-17T00:00:00Z' },
+            ],
+          },
+        ],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    await screen.findByText('Banner test')
+    expect(screen.getByText(/overridden/i)).toBeInTheDocument()
+    expect(screen.getByText(/was 8/i)).toBeInTheDocument()
+  })
+
+  it('does not mark the threshold as overridden when no override entries exist', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [
+          {
+            id: '1',
+            hypothesis: 'Banner test',
+            status: 'running',
+            locked_threshold: 8,
+            measured_value: null,
+            experiment_threshold_overrides: [],
+          },
+        ],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    await screen.findByText('Banner test')
+    expect(screen.queryByText(/overridden/i)).not.toBeInTheDocument()
+  })
+
   it('shows error and retry button when write-back fails', async () => {
     vi.mocked(supabase.from).mockReturnValue({
       select: vi.fn().mockResolvedValue({
