@@ -35,31 +35,16 @@ export class TrackerBootClient {
 }
 
 export type TBLabel = { id: string; name: string }
-export type TBStory = { id: string; name: string }
-
-const client = new TrackerBootClient(
-  (import.meta.env.VITE_TB_API_KEY as string) ?? '',
-)
-const PROJECT_ID = (import.meta.env.VITE_TB_PROJECT_ID as string) ?? ''
+export type TBStory = { id: string; title: string }
 
 export async function fetchLabels(): Promise<TBLabel[]> {
-  const data = await client.query<{ project: { labels: TBLabel[] } }>(`
-    query {
-      project(id: "${PROJECT_ID}") {
-        labels { id name }
-      }
-    }
-  `)
-  return data.project.labels
+  const res = await fetch('/api/tb-labels')
+  if (!res.ok) throw new Error(`Failed to fetch labels: ${res.status}`)
+  return res.json() as Promise<TBLabel[]>
 }
 
 export async function fetchStoriesByLabel(labelId: string): Promise<TBStory[]> {
-  const data = await client.query<{ project: { stories: TBStory[] } }>(`
-    query StoriesByLabel($projectId: ID!, $labelId: ID!) {
-      project(id: $projectId) {
-        stories(labelId: $labelId) { id name }
-      }
-    }
-  `, { projectId: PROJECT_ID, labelId })
-  return data.project.stories
+  const res = await fetch(`/api/tb-stories?labelId=${encodeURIComponent(labelId)}`)
+  if (!res.ok) throw new Error(`Failed to fetch stories: ${res.status}`)
+  return res.json() as Promise<TBStory[]>
 }

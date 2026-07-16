@@ -31,8 +31,8 @@ describe('LabelScopeSelector', () => {
       { id: '2', name: 'onboarding' },
     ])
     vi.mocked(fetchStoriesByLabel).mockResolvedValue([
-      { id: '101', name: 'User can edit profile' },
-      { id: '102', name: 'User can upload avatar' },
+      { id: '101', title: 'User can edit profile' },
+      { id: '102', title: 'User can upload avatar' },
     ])
 
     render(<LabelScopeSelector />, { wrapper: makeWrapper() })

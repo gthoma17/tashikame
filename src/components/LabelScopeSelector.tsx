@@ -46,7 +46,7 @@ export function LabelScopeSelector() {
         ) : (
           <ul className="label-scope__stories">
             {stories.map((story) => (
-              <li key={story.id}>{story.name}</li>
+              <li key={story.id}>{story.title}</li>
             ))}
           </ul>
         )
