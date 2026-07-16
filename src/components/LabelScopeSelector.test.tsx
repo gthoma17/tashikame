@@ -7,10 +7,9 @@ import { LabelScopeSelector } from './LabelScopeSelector'
 
 vi.mock('../lib/tracker-boot', () => ({
   fetchLabels: vi.fn(),
-  fetchStoriesByLabel: vi.fn(),
 }))
 
-import { fetchLabels, fetchStoriesByLabel } from '../lib/tracker-boot'
+import { fetchLabels } from '../lib/tracker-boot'
 
 function makeWrapper() {
   const queryClient = new QueryClient({
@@ -24,55 +23,41 @@ function makeWrapper() {
 describe('LabelScopeSelector', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('shows stories for the selected label', async () => {
-    const user = userEvent.setup()
+  it('lists labels from Tracker Boot as options', async () => {
     vi.mocked(fetchLabels).mockResolvedValue([
       { id: '1', name: 'profile' },
       { id: '2', name: 'onboarding' },
     ])
-    vi.mocked(fetchStoriesByLabel).mockResolvedValue([
-      { id: '101', title: 'User can edit profile' },
-      { id: '102', title: 'User can upload avatar' },
-    ])
 
     render(<LabelScopeSelector />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByRole('option', { name: 'profile' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'onboarding' })).toBeInTheDocument()
+  })
+
+  it('calls onLabelPick when a label is selected', async () => {
+    const user = userEvent.setup()
+    const onLabelPick = vi.fn()
+    vi.mocked(fetchLabels).mockResolvedValue([
+      { id: '1', name: 'profile' },
+      { id: '2', name: 'onboarding' },
+    ])
+
+    render(<LabelScopeSelector onLabelPick={onLabelPick} />, { wrapper: makeWrapper() })
 
     await screen.findByRole('option', { name: 'profile' })
     await user.selectOptions(screen.getByRole('combobox'), 'profile')
 
-    expect(await screen.findByText('User can edit profile')).toBeInTheDocument()
-    expect(screen.getByText('User can upload avatar')).toBeInTheDocument()
+    expect(onLabelPick).toHaveBeenCalledWith({ id: '1', name: 'profile' })
   })
 
-  it('calls onStoryPick when a story is selected', async () => {
-    const user = userEvent.setup()
-    const onStoryPick = vi.fn()
-    vi.mocked(fetchLabels).mockResolvedValue([{ id: '1', name: 'profile' }])
-    vi.mocked(fetchStoriesByLabel).mockResolvedValue([
-      { id: '101', title: 'User can edit profile' },
-    ])
-
-    render(<LabelScopeSelector onStoryPick={onStoryPick} />, { wrapper: makeWrapper() })
-
-    await screen.findByRole('option', { name: 'profile' })
-    await user.selectOptions(screen.getByRole('combobox'), 'profile')
-    await user.click(await screen.findByRole('radio', { name: 'User can edit profile' }))
-
-    expect(onStoryPick).toHaveBeenCalledWith({ id: '101', title: 'User can edit profile' })
-  })
-
-  it('shows empty message when selected label has no stories', async () => {
-    const user = userEvent.setup()
-    vi.mocked(fetchLabels).mockResolvedValue([{ id: '1', name: 'legacy' }])
-    vi.mocked(fetchStoriesByLabel).mockResolvedValue([])
+  it('shows an error message when labels cannot be loaded', async () => {
+    vi.mocked(fetchLabels).mockRejectedValue(new Error('boom'))
 
     render(<LabelScopeSelector />, { wrapper: makeWrapper() })
-
-    await screen.findByRole('option', { name: 'legacy' })
-    await user.selectOptions(screen.getByRole('combobox'), 'legacy')
 
     expect(
-      await screen.findByText(/no stories to experiment on/i)
+      await screen.findByText(/could not load labels/i),
     ).toBeInTheDocument()
   })
 })

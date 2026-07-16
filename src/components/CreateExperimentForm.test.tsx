@@ -30,11 +30,11 @@ describe('CreateExperimentForm', () => {
     vi.clearAllMocks()
   })
 
-  it('saves the experiment and navigates to the dashboard on submit', async () => {
+  it('saves the experiment scoped to the picked label and navigates to the dashboard', async () => {
     const user = userEvent.setup()
     vi.mocked(createExperiment).mockResolvedValue(undefined)
 
-    render(<CreateExperimentForm storyId="story-42" storyTitle="User can edit profile" />, { wrapper: makeWrapper() })
+    render(<CreateExperimentForm labelId="label-7" labelName="profile" />, { wrapper: makeWrapper() })
 
     await user.type(
       screen.getByLabelText(/hypothesis/i),
@@ -44,11 +44,10 @@ describe('CreateExperimentForm', () => {
     await user.click(screen.getByRole('button', { name: /create/i }))
 
     expect(createExperiment).toHaveBeenCalledWith({
-      storyId: 'story-42',
+      labelId: 'label-7',
       hypothesis: 'Users save 3 recipes per week',
       lockedThreshold: 3,
     })
-    // wait for navigation after mutation resolves
     await vi.waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith({ to: '/' })
     })
@@ -57,7 +56,7 @@ describe('CreateExperimentForm', () => {
   it('shows a validation error and does not submit when fields are empty', async () => {
     const user = userEvent.setup()
 
-    render(<CreateExperimentForm storyId="story-42" storyTitle="User can edit profile" />, { wrapper: makeWrapper() })
+    render(<CreateExperimentForm labelId="label-7" labelName="profile" />, { wrapper: makeWrapper() })
 
     await user.click(screen.getByRole('button', { name: /create/i }))
 
@@ -65,20 +64,20 @@ describe('CreateExperimentForm', () => {
     expect(createExperiment).not.toHaveBeenCalled()
   })
 
-  it('disables submit when no story is picked', () => {
-    render(<CreateExperimentForm storyId={null} storyTitle={null} />, {
+  it('disables submit when no label is picked', () => {
+    render(<CreateExperimentForm labelId={null} labelName={null} />, {
       wrapper: makeWrapper(),
     })
 
     expect(screen.getByRole('button', { name: /create/i })).toBeDisabled()
   })
 
-  it('shows the picked story as the scope target', () => {
+  it('shows the picked label as the scope target', () => {
     render(
-      <CreateExperimentForm storyId="story-42" storyTitle="User can edit profile" />,
+      <CreateExperimentForm labelId="label-7" labelName="profile" />,
       { wrapper: makeWrapper() },
     )
 
-    expect(screen.getByText(/scoped to/i)).toHaveTextContent('User can edit profile')
+    expect(screen.getByText(/scoped to/i)).toHaveTextContent('profile')
   })
 })

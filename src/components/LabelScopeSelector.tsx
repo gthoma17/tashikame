@@ -1,25 +1,15 @@
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { fetchLabels, fetchStoriesByLabel } from '../lib/tracker-boot'
+import { fetchLabels } from '../lib/tracker-boot'
 import './LabelScopeSelector.css'
 
 type Props = {
-  onStoryPick?: (story: { id: string; title: string }) => void
+  onLabelPick?: (label: { id: string; name: string }) => void
 }
 
-export function LabelScopeSelector({ onStoryPick }: Props = {}) {
-  const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null)
-  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null)
-
+export function LabelScopeSelector({ onLabelPick }: Props = {}) {
   const { data: labels, isError: labelsError } = useQuery({
     queryKey: ['tb-labels'],
     queryFn: fetchLabels,
-  })
-
-  const { data: stories, isError: storiesError } = useQuery({
-    queryKey: ['tb-stories', selectedLabelId],
-    queryFn: () => fetchStoriesByLabel(selectedLabelId!),
-    enabled: selectedLabelId !== null,
   })
 
   if (labelsError) {
@@ -30,46 +20,19 @@ export function LabelScopeSelector({ onStoryPick }: Props = {}) {
     <div className="label-scope">
       <select
         className="label-scope__select"
-        value={selectedLabelId ?? ''}
-        onChange={(e) => setSelectedLabelId(e.target.value || null)}
+        defaultValue=""
+        onChange={(e) => {
+          const picked = labels?.find((l) => l.id === e.target.value)
+          if (picked) onLabelPick?.(picked)
+        }}
       >
-        <option value="">Select a label…</option>
+        <option value="" disabled>Select a label…</option>
         {labels?.map((label) => (
           <option key={label.id} value={label.id}>
             {label.name}
           </option>
         ))}
       </select>
-
-      {storiesError && (
-        <p className="label-scope__error">Could not load stories for this label.</p>
-      )}
-
-      {selectedLabelId !== null && stories !== undefined && !storiesError && (
-        stories.length === 0 ? (
-          <p className="label-scope__empty">This feature has no stories to experiment on.</p>
-        ) : (
-          <ul className="label-scope__stories">
-            {stories.map((story) => (
-              <li key={story.id}>
-                <label className="label-scope__story">
-                  <input
-                    type="radio"
-                    name="story-pick"
-                    value={story.id}
-                    checked={selectedStoryId === story.id}
-                    onChange={() => {
-                      setSelectedStoryId(story.id)
-                      onStoryPick?.({ id: story.id, title: story.title })
-                    }}
-                  />
-                  {story.title}
-                </label>
-              </li>
-            ))}
-          </ul>
-        )
-      )}
     </div>
   )
 }

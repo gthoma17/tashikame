@@ -5,18 +5,18 @@ import { createExperiment } from '../lib/experiments'
 import './CreateExperimentForm.css'
 
 type Props = {
-  storyId: string | null
-  storyTitle: string | null
+  labelId: string | null
+  labelName: string | null
 }
 
-export function CreateExperimentForm({ storyId, storyTitle }: Props) {
+export function CreateExperimentForm({ labelId, labelName }: Props) {
   const navigate = useNavigate()
   const [hypothesis, setHypothesis] = useState('')
   const [threshold, setThreshold] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: (input: { storyId: string; hypothesis: string; lockedThreshold: number }) =>
+    mutationFn: (input: { labelId: string; hypothesis: string; lockedThreshold: number }) =>
       createExperiment(input),
     onSuccess: () => navigate({ to: '/' }),
   })
@@ -29,7 +29,7 @@ export function CreateExperimentForm({ storyId, storyTitle }: Props) {
     }
     setError(null)
     mutation.mutate({
-      storyId: storyId!,
+      labelId: labelId!,
       hypothesis: hypothesis.trim(),
       lockedThreshold: Number(threshold),
     })
@@ -37,9 +37,9 @@ export function CreateExperimentForm({ storyId, storyTitle }: Props) {
 
   return (
     <form className="create-form" onSubmit={handleSubmit}>
-      {storyTitle && (
+      {labelName && (
         <p className="create-form__scope">
-          Scoped to: <strong>{storyTitle}</strong>
+          Scoped to: <strong>{labelName}</strong>
         </p>
       )}
       <label className="create-form__field">
@@ -74,7 +74,7 @@ export function CreateExperimentForm({ storyId, storyTitle }: Props) {
       <button
         type="submit"
         className="create-form__submit"
-        disabled={storyId === null || mutation.isPending}
+        disabled={labelId === null || mutation.isPending}
       >
         {mutation.isPending ? 'Creating…' : 'Create'}
       </button>
