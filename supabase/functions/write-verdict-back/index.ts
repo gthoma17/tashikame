@@ -13,10 +13,19 @@ function computeVerdict(threshold: number, measured: number): 'kill' | 'keep' | 
   return 'inconclusive'
 }
 
-function verdictLabel(verdict: 'kill' | 'keep' | 'inconclusive'): string {
-  if (verdict === 'kill') return 'killed'
-  if (verdict === 'keep') return 'kept'
-  return 'inconclusive'
+type VerdictOverrides = {
+  verdict_label_kill: string | null
+  verdict_label_keep: string | null
+  verdict_label_inconclusive: string | null
+}
+
+function verdictLabel(
+  verdict: 'kill' | 'keep' | 'inconclusive',
+  overrides: VerdictOverrides,
+): string {
+  if (verdict === 'kill') return overrides.verdict_label_kill ?? 'killed'
+  if (verdict === 'keep') return overrides.verdict_label_keep ?? 'kept'
+  return overrides.verdict_label_inconclusive ?? 'inconclusive'
 }
 
 async function tbRequest<T>(
@@ -112,7 +121,7 @@ Deno.serve(async (req) => {
 
     const { data: exp, error: dbErr } = await supabase
       .from('experiments')
-      .select('label_id, locked_threshold, measured_value')
+      .select('label_id, locked_threshold, measured_value, verdict_label_kill, verdict_label_keep, verdict_label_inconclusive')
       .eq('id', experimentId)
       .single()
 
@@ -122,7 +131,11 @@ Deno.serve(async (req) => {
     }
 
     const verdict = computeVerdict(Number(exp.locked_threshold), Number(exp.measured_value))
-    const label = verdictLabel(verdict)
+    const label = verdictLabel(verdict, {
+      verdict_label_kill: exp.verdict_label_kill,
+      verdict_label_keep: exp.verdict_label_keep,
+      verdict_label_inconclusive: exp.verdict_label_inconclusive,
+    })
 
     const storyIds = await storiesUnderLabel(exp.label_id, projectId, tbToken)
     if (storyIds.length === 0) {
