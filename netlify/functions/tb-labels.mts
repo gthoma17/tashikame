@@ -16,6 +16,10 @@ export default async (_req: Request) => {
     }),
   })
 
+  if (!res.ok) {
+    return Response.json({ error: `TB API HTTP error: ${res.status}` }, { status: 502 })
+  }
+
   const json = await res.json() as { data?: { labels: unknown[] }; errors?: unknown[] }
 
   if (json.errors?.length) {
