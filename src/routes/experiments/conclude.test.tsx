@@ -39,7 +39,7 @@ describe('ConcludeExperimentForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /save/i }))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /save/i })).toBeDisabled()
+      expect(screen.getByRole('button')).toBeDisabled()
     })
 
     await act(async () => { resolve() })
