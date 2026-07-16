@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { surfaceRiskiestAssumption } from './llm'
+import { surfaceRiskiestAssumption, suggestExperiment } from './llm'
 
 describe('surfaceRiskiestAssumption', () => {
   beforeEach(() => {
@@ -41,5 +41,65 @@ describe('surfaceRiskiestAssumption', () => {
     await expect(
       surfaceRiskiestAssumption({ labelId: 'x', labelName: 'x' }),
     ).rejects.toThrow(/surface.*assumption/i)
+  })
+})
+
+describe('suggestExperiment', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('POSTs the hypothesis to /api/suggest-experiment and returns a full Test Card draft (incl. proposed threshold)', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          test: 'Add a Save button that opens a coming-soon modal on the recipe page',
+          metric: 'Save-button click-through rate',
+          criteria: 'At least 30% of recipe-page visitors click Save within a week',
+          lockedThreshold: 30,
+          critical: 3,
+          testCost: 1,
+          dataReliability: 2,
+          timeRequired: 1,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await suggestExperiment({
+      hypothesis: 'Users will save at least 3 recipes per week',
+    })
+
+    expect(result).toEqual({
+      test: 'Add a Save button that opens a coming-soon modal on the recipe page',
+      metric: 'Save-button click-through rate',
+      criteria: 'At least 30% of recipe-page visitors click Save within a week',
+      lockedThreshold: 30,
+      critical: 3,
+      testCost: 1,
+      dataReliability: 2,
+      timeRequired: 1,
+    })
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/suggest-experiment',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ hypothesis: 'Users will save at least 3 recipes per week' }),
+      }),
+    )
+  })
+
+  it('throws when the endpoint responds with an error status', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify({ error: 'upstream failure' }), { status: 502 }),
+    )
+
+    await expect(
+      suggestExperiment({ hypothesis: 'x' }),
+    ).rejects.toThrow(/suggest.*experiment/i)
   })
 })
