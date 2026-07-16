@@ -7,9 +7,42 @@ vi.mock('./supabase', () => ({
 }))
 
 import { supabase } from './supabase'
-import { concludeExperiment, computeVerdict } from './experiments'
+import { concludeExperiment, computeVerdict, createExperiment } from './experiments'
 
 const mockFrom = supabase.from as ReturnType<typeof vi.fn>
+
+describe('createExperiment', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('inserts a draft experiment linked to the picked story', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
+    mockFrom.mockReturnValue({ insert: mockInsert })
+
+    await createExperiment({
+      storyId: 'story-42',
+      hypothesis: 'Users will save 3 recipes per week',
+      lockedThreshold: 3,
+    })
+
+    expect(mockFrom).toHaveBeenCalledWith('experiments')
+    expect(mockInsert).toHaveBeenCalledWith({
+      story_id: 'story-42',
+      hypothesis: 'Users will save 3 recipes per week',
+      locked_threshold: 3,
+    })
+  })
+
+  it('throws when supabase returns an error', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: new Error('insert failed') })
+    mockFrom.mockReturnValue({ insert: mockInsert })
+
+    await expect(
+      createExperiment({ storyId: 's', hypothesis: 'h', lockedThreshold: 1 }),
+    ).rejects.toThrow('insert failed')
+  })
+})
 
 describe('concludeExperiment', () => {
   beforeEach(() => {

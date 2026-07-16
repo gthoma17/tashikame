@@ -3,8 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchLabels, fetchStoriesByLabel } from '../lib/tracker-boot'
 import './LabelScopeSelector.css'
 
-export function LabelScopeSelector() {
+type Props = {
+  onStoryPick?: (storyId: string) => void
+}
+
+export function LabelScopeSelector({ onStoryPick }: Props = {}) {
   const [selectedLabelId, setSelectedLabelId] = useState<string | null>(null)
+  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null)
 
   const { data: labels, isError: labelsError } = useQuery({
     queryKey: ['tb-labels'],
@@ -46,7 +51,21 @@ export function LabelScopeSelector() {
         ) : (
           <ul className="label-scope__stories">
             {stories.map((story) => (
-              <li key={story.id}>{story.title}</li>
+              <li key={story.id}>
+                <label className="label-scope__story">
+                  <input
+                    type="radio"
+                    name="story-pick"
+                    value={story.id}
+                    checked={selectedStoryId === story.id}
+                    onChange={() => {
+                      setSelectedStoryId(story.id)
+                      onStoryPick?.(story.id)
+                    }}
+                  />
+                  {story.title}
+                </label>
+              </li>
             ))}
           </ul>
         )
