@@ -1,3 +1,5 @@
+import { Dashboard } from '../components/Dashboard'
+
 export function IndexPage() {
-  return <h1>Tashikame</h1>
+  return <Dashboard />
 }
