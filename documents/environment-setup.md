@@ -47,7 +47,7 @@ Status marks: ⬜ not done · 🔄 in progress · ✅ done
 
 ## Per-step notes
 
-*(Record blockers, decisions, and any manual account actions here — so a later session can pick up if this one is interrupted.)*
+**Step 4 — Netlify branch deploys**: After linking the repo, the default "Deploy only the production branch" setting blocks the acceptance mirror (`main--`) and dev previews (`dev-*--`). In **Site configuration → Build & deploy → Branches and deploy contexts**, set Branch deploys to "All branches" (or explicitly include `main` and `dev-hoge`, `dev-piyo`). Without this, merges to main don't auto-deploy. Caught on first merge of #200029020 — acceptance URL returned 404.
 
 ---
 

@@ -147,6 +147,7 @@ The **source of truth for the push report format is each track file's `## Notifi
 
 ## Deployment Rules (single site + deploy contexts)
 - **One site.** Pin env in `netlify.toml`'s `[build.environment]` as the single source (only `VITE_` public keys — no per-site dashboard scoping, to prevent drift).
+- **Netlify branch deploy settings** (Site configuration → Build & deploy → Branches and deploy contexts): Production branch = `production`. Branch deploys must include `main` and `dev-*` (set to "All branches" or add each explicitly) — without this, the acceptance mirror and dev previews never build.
 - git push (main) → **acceptance mirror** (`https://main--tashi-kame.netlify.app` = the `main--{site}` branch deploy) auto-deploys. **Merge is not immediate production** — after Accept, `promote.yml` (GitHub Actions) polls the tracker and fast-forwards the `production` branch automatically (within ~5 min, `https://tashi-kame.netlify.app`). Requires repo secret `TRACKER_BOOT_API_KEY`; no bot token needed.
 - If hosting is set to "Other", fill in this line with the actual deploy method yourself
 - Never ask Greg to "push"
