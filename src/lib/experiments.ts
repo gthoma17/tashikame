@@ -1,21 +1,43 @@
 import { supabase } from './supabase'
 
+export type TestCardRating = 1 | 2 | 3
+
 export type VerdictLabelInput = {
   kill?: string
   keep?: string
   inconclusive?: string
 }
 
-export async function createExperiment(input: {
+export type CreateExperimentInput = {
   labelId: string
+  testName: string
+  deadline: string
   hypothesis: string
+  test: string
+  metric: string
+  criteria: string
   lockedThreshold: number
+  critical: TestCardRating
+  testCost: TestCardRating
+  dataReliability: TestCardRating
+  timeRequired: TestCardRating
   verdictLabels?: VerdictLabelInput
-}) {
+}
+
+export async function createExperiment(input: CreateExperimentInput) {
   const row: Record<string, unknown> = {
     label_id: input.labelId,
+    test_name: input.testName,
+    deadline: input.deadline,
     hypothesis: input.hypothesis,
+    test: input.test,
+    metric: input.metric,
+    criteria: input.criteria,
     locked_threshold: input.lockedThreshold,
+    critical: input.critical,
+    test_cost: input.testCost,
+    data_reliability: input.dataReliability,
+    time_required: input.timeRequired,
     status: 'running',
   }
   const labels = input.verdictLabels

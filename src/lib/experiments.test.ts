@@ -18,21 +18,39 @@ describe('createExperiment', () => {
     vi.clearAllMocks()
   })
 
-  it('inserts a running experiment scoped to the picked label', async () => {
+  it('inserts a running experiment as a full Test Card scoped to the picked label', async () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     mockFrom.mockReturnValue({ insert: mockInsert })
 
     await createExperiment({
       labelId: 'label-7',
+      testName: 'Recipe save fake-door',
+      deadline: '2026-08-01',
       hypothesis: 'Users will save 3 recipes per week',
-      lockedThreshold: 3,
+      test: 'Add a Save button that opens a coming-soon modal',
+      metric: 'Save-button click-through rate',
+      criteria: 'At least 30% of visitors click Save within one week',
+      lockedThreshold: 30,
+      critical: 3,
+      testCost: 1,
+      dataReliability: 2,
+      timeRequired: 1,
     })
 
     expect(mockFrom).toHaveBeenCalledWith('experiments')
     expect(mockInsert).toHaveBeenCalledWith({
       label_id: 'label-7',
+      test_name: 'Recipe save fake-door',
+      deadline: '2026-08-01',
       hypothesis: 'Users will save 3 recipes per week',
-      locked_threshold: 3,
+      test: 'Add a Save button that opens a coming-soon modal',
+      metric: 'Save-button click-through rate',
+      criteria: 'At least 30% of visitors click Save within one week',
+      locked_threshold: 30,
+      critical: 3,
+      test_cost: 1,
+      data_reliability: 2,
+      time_required: 1,
       status: 'running',
     })
   })
@@ -42,7 +60,20 @@ describe('createExperiment', () => {
     mockFrom.mockReturnValue({ insert: mockInsert })
 
     await expect(
-      createExperiment({ labelId: 'l', hypothesis: 'h', lockedThreshold: 1 }),
+      createExperiment({
+        labelId: 'l',
+        testName: 't',
+        deadline: '2026-01-01',
+        hypothesis: 'h',
+        test: 't',
+        metric: 'm',
+        criteria: 'c',
+        lockedThreshold: 1,
+        critical: 1,
+        testCost: 1,
+        dataReliability: 1,
+        timeRequired: 1,
+      }),
     ).rejects.toThrow('insert failed')
   })
 
@@ -52,20 +83,27 @@ describe('createExperiment', () => {
 
     await createExperiment({
       labelId: 'label-7',
+      testName: 'x',
+      deadline: '2026-08-01',
       hypothesis: 'h',
+      test: 't',
+      metric: 'm',
+      criteria: 'c',
       lockedThreshold: 3,
+      critical: 1,
+      testCost: 1,
+      dataReliability: 1,
+      timeRequired: 1,
       verdictLabels: { kill: 'cut', keep: 'ship it', inconclusive: 'unclear' },
     })
 
-    expect(mockInsert).toHaveBeenCalledWith({
-      label_id: 'label-7',
-      hypothesis: 'h',
-      locked_threshold: 3,
-      status: 'running',
-      verdict_label_kill: 'cut',
-      verdict_label_keep: 'ship it',
-      verdict_label_inconclusive: 'unclear',
-    })
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        verdict_label_kill: 'cut',
+        verdict_label_keep: 'ship it',
+        verdict_label_inconclusive: 'unclear',
+      }),
+    )
   })
 
   it('omits verdict-label columns when no custom labels are provided', async () => {
@@ -74,8 +112,17 @@ describe('createExperiment', () => {
 
     await createExperiment({
       labelId: 'label-7',
+      testName: 'x',
+      deadline: '2026-08-01',
       hypothesis: 'h',
+      test: 't',
+      metric: 'm',
+      criteria: 'c',
       lockedThreshold: 3,
+      critical: 1,
+      testCost: 1,
+      dataReliability: 1,
+      timeRequired: 1,
     })
 
     const arg = mockInsert.mock.calls[0][0]
