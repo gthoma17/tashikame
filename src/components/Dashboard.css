@@ -76,14 +76,19 @@
   font-weight: 500;
 }
 
-.verdict--validated {
-  background: #ecfdf5;
-  color: var(--color-verdict-validated);
+.verdict--kill {
+  background: #fef2f2;
+  color: var(--color-verdict-kill);
 }
 
-.verdict--invalidated {
-  background: #fef2f2;
-  color: var(--color-verdict-invalidated);
+.verdict--keep {
+  background: #ecfdf5;
+  color: var(--color-verdict-keep);
+}
+
+.verdict--inconclusive {
+  background: #fffbeb;
+  color: var(--color-verdict-inconclusive);
 }
 
 .dashboard-empty {
