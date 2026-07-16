@@ -1,5 +1,10 @@
 // Bedrock (not direct Anthropic API) — PM's BKL AWS sandbox pays for it.
 // Don't "fix" this toward api.anthropic.com.
+//
+// Env vars are BKL_-prefixed because Netlify reserves the AWS_* namespace
+// for its own Lambda infrastructure; we can't use AWS_ACCESS_KEY_ID etc.
+// directly, and must pass credentials explicitly to the client rather than
+// relying on the SDK's default provider chain.
 import type { Config } from '@netlify/functions'
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime'
 
@@ -43,8 +48,18 @@ async function invokeClaudeOnBedrock(prompt: string): Promise<string> {
   const modelId = Netlify.env.get('BEDROCK_MODEL_ID')
   if (!modelId) throw new Error('BEDROCK_MODEL_ID is not configured')
 
-  // Region is required by the SDK; AWS creds come from the standard AWS_* env vars.
-  const client = new BedrockRuntimeClient({ region: Netlify.env.get('AWS_REGION') })
+  const accessKeyId = Netlify.env.get('BKL_AWS_ACCESS_KEY_ID')
+  const secretAccessKey = Netlify.env.get('BKL_AWS_SECRET_ACCESS_KEY')
+  const sessionToken = Netlify.env.get('BKL_AWS_SESSION_TOKEN')
+  const region = Netlify.env.get('BKL_AWS_REGION')
+  if (!accessKeyId || !secretAccessKey || !sessionToken || !region) {
+    throw new Error('BKL_AWS_* credentials are not fully configured')
+  }
+
+  const client = new BedrockRuntimeClient({
+    region,
+    credentials: { accessKeyId, secretAccessKey, sessionToken },
+  })
 
   const command = new InvokeModelCommand({
     modelId,
