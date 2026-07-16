@@ -18,7 +18,7 @@ describe('createExperiment', () => {
     vi.clearAllMocks()
   })
 
-  it('inserts a draft experiment scoped to the picked label', async () => {
+  it('inserts a running experiment scoped to the picked label', async () => {
     const mockInsert = vi.fn().mockResolvedValue({ error: null })
     mockFrom.mockReturnValue({ insert: mockInsert })
 
@@ -33,6 +33,7 @@ describe('createExperiment', () => {
       label_id: 'label-7',
       hypothesis: 'Users will save 3 recipes per week',
       locked_threshold: 3,
+      status: 'running',
     })
   })
 

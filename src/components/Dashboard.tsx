@@ -8,7 +8,7 @@ import './Dashboard.css'
 type Experiment = {
   id: string
   hypothesis: string
-  status: 'draft' | 'running' | 'concluded'
+  status: 'running' | 'concluded'
   locked_threshold: number | null
   measured_value: number | null
 }
@@ -16,7 +16,6 @@ type Experiment = {
 type WriteBackState = 'idle' | 'loading' | 'done' | 'error'
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: 'Proposed',
   running: 'Running',
   concluded: 'Concluded',
 }

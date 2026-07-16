@@ -9,6 +9,7 @@ export async function createExperiment(input: {
     label_id: input.labelId,
     hypothesis: input.hypothesis,
     locked_threshold: input.lockedThreshold,
+    status: 'running',
   })
   if (error) throw error
 }

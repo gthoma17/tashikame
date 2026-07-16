@@ -81,7 +81,7 @@ describe('Dashboard', () => {
 
   it('shows each experiment with its name and status', async () => {
     const experiments = [
-      { id: '1', hypothesis: 'Adding banner increases signups', status: 'draft', locked_threshold: null, measured_value: null },
+      { id: '1', hypothesis: 'Adding banner increases signups', status: 'running', locked_threshold: null, measured_value: null },
       { id: '2', hypothesis: 'Shorter form reduces drop-off', status: 'running', locked_threshold: null, measured_value: null },
       { id: '3', hypothesis: 'Social proof boosts trust', status: 'concluded', locked_threshold: 8, measured_value: 12 },
     ]
@@ -237,11 +237,10 @@ describe('Dashboard', () => {
     expect(link).toHaveAttribute('href', '/experiments/run-1/conclude')
   })
 
-  it('does not show a Conclude action on concluded or proposed rows', async () => {
+  it('does not show a Conclude action on concluded rows', async () => {
     vi.mocked(supabase.from).mockReturnValue({
       select: vi.fn().mockResolvedValue({
         data: [
-          { id: 'draft-1', hypothesis: 'Proposed one', status: 'draft', locked_threshold: null, measured_value: null },
           { id: 'done-1', hypothesis: 'Concluded one', status: 'concluded', locked_threshold: 8, measured_value: 12 },
         ],
         error: null,
@@ -250,7 +249,7 @@ describe('Dashboard', () => {
 
     render(<Dashboard />, { wrapper: makeWrapper() })
 
-    await screen.findByText('Proposed one')
+    await screen.findByText('Concluded one')
     expect(screen.queryByRole('link', { name: /conclude/i })).not.toBeInTheDocument()
   })
 
