@@ -64,7 +64,7 @@
 }
 
 .status--concluded {
-  background: #ecfdf5;
+  background: #f5f3ff;
   color: var(--color-status-concluded);
 }
 
