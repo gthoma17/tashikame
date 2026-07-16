@@ -148,4 +148,51 @@ describe('CreateExperimentForm', () => {
 
     expect(screen.getByRole('button', { name: /surface the riskiest assumption/i })).toBeDisabled()
   })
+
+  it('passes trimmed custom verdict labels to createExperiment when provided', async () => {
+    const user = userEvent.setup()
+    vi.mocked(createExperiment).mockResolvedValue(undefined)
+
+    render(<CreateExperimentForm labelId="label-7" labelName="profile" />, { wrapper: makeWrapper() })
+
+    await user.type(screen.getByLabelText(/hypothesis/i), 'H')
+    await user.type(screen.getByLabelText(/threshold/i), '3')
+    await user.type(screen.getByLabelText(/kill label/i), '  cut ')
+    await user.type(screen.getByLabelText(/keep label/i), 'ship it')
+    await user.type(screen.getByLabelText(/inconclusive label/i), 'unclear')
+    await user.click(screen.getByRole('button', { name: /^create$/i }))
+
+    expect(createExperiment).toHaveBeenCalledWith({
+      labelId: 'label-7',
+      hypothesis: 'H',
+      lockedThreshold: 3,
+      verdictLabels: { kill: 'cut', keep: 'ship it', inconclusive: 'unclear' },
+    })
+  })
+
+  it('omits verdictLabels when the label-name fields are left empty or whitespace', async () => {
+    const user = userEvent.setup()
+    vi.mocked(createExperiment).mockResolvedValue(undefined)
+
+    render(<CreateExperimentForm labelId="label-7" labelName="profile" />, { wrapper: makeWrapper() })
+
+    await user.type(screen.getByLabelText(/hypothesis/i), 'H')
+    await user.type(screen.getByLabelText(/threshold/i), '3')
+    await user.type(screen.getByLabelText(/kill label/i), '   ')
+    await user.click(screen.getByRole('button', { name: /^create$/i }))
+
+    expect(createExperiment).toHaveBeenCalledWith({
+      labelId: 'label-7',
+      hypothesis: 'H',
+      lockedThreshold: 3,
+    })
+  })
+
+  it('shows the default labels as placeholders on the custom-label inputs', () => {
+    render(<CreateExperimentForm labelId="label-7" labelName="profile" />, { wrapper: makeWrapper() })
+
+    expect(screen.getByLabelText(/kill label/i)).toHaveAttribute('placeholder', 'killed')
+    expect(screen.getByLabelText(/keep label/i)).toHaveAttribute('placeholder', 'kept')
+    expect(screen.getByLabelText(/inconclusive label/i)).toHaveAttribute('placeholder', 'inconclusive')
+  })
 })

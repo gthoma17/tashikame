@@ -14,11 +14,13 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
   const navigate = useNavigate()
   const [hypothesis, setHypothesis] = useState('')
   const [threshold, setThreshold] = useState('')
+  const [killLabel, setKillLabel] = useState('')
+  const [keepLabel, setKeepLabel] = useState('')
+  const [inconclusiveLabel, setInconclusiveLabel] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const createMutation = useMutation({
-    mutationFn: (input: { labelId: string; hypothesis: string; lockedThreshold: number }) =>
-      createExperiment(input),
+    mutationFn: (input: Parameters<typeof createExperiment>[0]) => createExperiment(input),
     onSuccess: () => navigate({ to: '/' }),
   })
 
@@ -34,10 +36,15 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
       return
     }
     setError(null)
+    const verdictLabels: { kill?: string; keep?: string; inconclusive?: string } = {}
+    if (killLabel.trim()) verdictLabels.kill = killLabel.trim()
+    if (keepLabel.trim()) verdictLabels.keep = keepLabel.trim()
+    if (inconclusiveLabel.trim()) verdictLabels.inconclusive = inconclusiveLabel.trim()
     createMutation.mutate({
       labelId: labelId!,
       hypothesis: hypothesis.trim(),
       lockedThreshold: Number(threshold),
+      ...(Object.keys(verdictLabels).length > 0 ? { verdictLabels } : {}),
     })
   }
 
@@ -83,6 +90,36 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
           step="any"
           value={threshold}
           onChange={(e) => setThreshold(e.target.value)}
+        />
+      </label>
+      <label className="create-form__field">
+        <span className="create-form__label">Kill label (optional)</span>
+        <input
+          className="create-form__input"
+          type="text"
+          placeholder="killed"
+          value={killLabel}
+          onChange={(e) => setKillLabel(e.target.value)}
+        />
+      </label>
+      <label className="create-form__field">
+        <span className="create-form__label">Keep label (optional)</span>
+        <input
+          className="create-form__input"
+          type="text"
+          placeholder="kept"
+          value={keepLabel}
+          onChange={(e) => setKeepLabel(e.target.value)}
+        />
+      </label>
+      <label className="create-form__field">
+        <span className="create-form__label">Inconclusive label (optional)</span>
+        <input
+          className="create-form__input"
+          type="text"
+          placeholder="inconclusive"
+          value={inconclusiveLabel}
+          onChange={(e) => setInconclusiveLabel(e.target.value)}
         />
       </label>
       {error && (

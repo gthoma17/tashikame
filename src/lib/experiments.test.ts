@@ -45,6 +45,44 @@ describe('createExperiment', () => {
       createExperiment({ labelId: 'l', hypothesis: 'h', lockedThreshold: 1 }),
     ).rejects.toThrow('insert failed')
   })
+
+  it('persists custom verdict labels when provided', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
+    mockFrom.mockReturnValue({ insert: mockInsert })
+
+    await createExperiment({
+      labelId: 'label-7',
+      hypothesis: 'h',
+      lockedThreshold: 3,
+      verdictLabels: { kill: 'cut', keep: 'ship it', inconclusive: 'unclear' },
+    })
+
+    expect(mockInsert).toHaveBeenCalledWith({
+      label_id: 'label-7',
+      hypothesis: 'h',
+      locked_threshold: 3,
+      status: 'running',
+      verdict_label_kill: 'cut',
+      verdict_label_keep: 'ship it',
+      verdict_label_inconclusive: 'unclear',
+    })
+  })
+
+  it('omits verdict-label columns when no custom labels are provided', async () => {
+    const mockInsert = vi.fn().mockResolvedValue({ error: null })
+    mockFrom.mockReturnValue({ insert: mockInsert })
+
+    await createExperiment({
+      labelId: 'label-7',
+      hypothesis: 'h',
+      lockedThreshold: 3,
+    })
+
+    const arg = mockInsert.mock.calls[0][0]
+    expect(arg).not.toHaveProperty('verdict_label_kill')
+    expect(arg).not.toHaveProperty('verdict_label_keep')
+    expect(arg).not.toHaveProperty('verdict_label_inconclusive')
+  })
 })
 
 describe('concludeExperiment', () => {
@@ -124,6 +162,27 @@ describe('computeVerdictLabel', () => {
 
   it('maps inconclusive to "inconclusive"', () => {
     expect(computeVerdictLabel('inconclusive')).toBe('inconclusive')
+  })
+
+  it('prefers the experiment override when present', () => {
+    expect(
+      computeVerdictLabel('kill', { kill: 'cut', keep: 'ship it', inconclusive: 'unclear' }),
+    ).toBe('cut')
+    expect(
+      computeVerdictLabel('keep', { kill: 'cut', keep: 'ship it', inconclusive: 'unclear' }),
+    ).toBe('ship it')
+    expect(
+      computeVerdictLabel('inconclusive', { kill: 'cut', keep: 'ship it', inconclusive: 'unclear' }),
+    ).toBe('unclear')
+  })
+
+  it('falls back to the default when the matching override is null', () => {
+    expect(computeVerdictLabel('kill', { kill: null, keep: 'ship it', inconclusive: null })).toBe(
+      'killed',
+    )
+    expect(
+      computeVerdictLabel('inconclusive', { kill: null, keep: null, inconclusive: null }),
+    ).toBe('inconclusive')
   })
 })
 
