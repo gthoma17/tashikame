@@ -4,7 +4,7 @@ import { fetchLabels, fetchStoriesByLabel } from '../lib/tracker-boot'
 import './LabelScopeSelector.css'
 
 type Props = {
-  onStoryPick?: (storyId: string) => void
+  onStoryPick?: (story: { id: string; title: string }) => void
 }
 
 export function LabelScopeSelector({ onStoryPick }: Props = {}) {
@@ -60,7 +60,7 @@ export function LabelScopeSelector({ onStoryPick }: Props = {}) {
                     checked={selectedStoryId === story.id}
                     onChange={() => {
                       setSelectedStoryId(story.id)
-                      onStoryPick?.(story.id)
+                      onStoryPick?.({ id: story.id, title: story.title })
                     }}
                   />
                   {story.title}

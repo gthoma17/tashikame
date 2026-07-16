@@ -6,9 +6,10 @@ import './CreateExperimentForm.css'
 
 type Props = {
   storyId: string | null
+  storyTitle: string | null
 }
 
-export function CreateExperimentForm({ storyId }: Props) {
+export function CreateExperimentForm({ storyId, storyTitle }: Props) {
   const navigate = useNavigate()
   const [hypothesis, setHypothesis] = useState('')
   const [threshold, setThreshold] = useState('')
@@ -36,6 +37,11 @@ export function CreateExperimentForm({ storyId }: Props) {
 
   return (
     <form className="create-form" onSubmit={handleSubmit}>
+      {storyTitle && (
+        <p className="create-form__scope">
+          Scoped to: <strong>{storyTitle}</strong>
+        </p>
+      )}
       <label className="create-form__field">
         <span className="create-form__label">Hypothesis</span>
         <textarea

@@ -5,6 +5,15 @@
   margin-top: var(--space-6);
 }
 
+.create-form__scope {
+  margin: 0;
+  padding: var(--space-3);
+  background: var(--color-surface-muted, rgba(0, 0, 0, 0.04));
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
 .create-form__field {
   display: flex;
   flex-direction: column;

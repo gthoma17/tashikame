@@ -4,7 +4,7 @@ import { LabelScopeSelector } from '../components/LabelScopeSelector'
 import { CreateExperimentForm } from '../components/CreateExperimentForm'
 
 export function CreatePage() {
-  const [storyId, setStoryId] = useState<string | null>(null)
+  const [picked, setPicked] = useState<{ id: string; title: string } | null>(null)
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -17,8 +17,8 @@ export function CreatePage() {
       <p style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-6)', fontSize: '0.9rem' }}>
         Choose a label to scope this experiment to a feature area, then pick a story.
       </p>
-      <LabelScopeSelector onStoryPick={setStoryId} />
-      <CreateExperimentForm storyId={storyId} />
+      <LabelScopeSelector onStoryPick={setPicked} />
+      <CreateExperimentForm storyId={picked?.id ?? null} storyTitle={picked?.title ?? null} />
     </div>
   )
 }

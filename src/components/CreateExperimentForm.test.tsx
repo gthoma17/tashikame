@@ -34,7 +34,7 @@ describe('CreateExperimentForm', () => {
     const user = userEvent.setup()
     vi.mocked(createExperiment).mockResolvedValue(undefined)
 
-    render(<CreateExperimentForm storyId="story-42" />, { wrapper: makeWrapper() })
+    render(<CreateExperimentForm storyId="story-42" storyTitle="User can edit profile" />, { wrapper: makeWrapper() })
 
     await user.type(
       screen.getByLabelText(/hypothesis/i),
@@ -57,7 +57,7 @@ describe('CreateExperimentForm', () => {
   it('shows a validation error and does not submit when fields are empty', async () => {
     const user = userEvent.setup()
 
-    render(<CreateExperimentForm storyId="story-42" />, { wrapper: makeWrapper() })
+    render(<CreateExperimentForm storyId="story-42" storyTitle="User can edit profile" />, { wrapper: makeWrapper() })
 
     await user.click(screen.getByRole('button', { name: /create/i }))
 
@@ -66,8 +66,19 @@ describe('CreateExperimentForm', () => {
   })
 
   it('disables submit when no story is picked', () => {
-    render(<CreateExperimentForm storyId={null} />, { wrapper: makeWrapper() })
+    render(<CreateExperimentForm storyId={null} storyTitle={null} />, {
+      wrapper: makeWrapper(),
+    })
 
     expect(screen.getByRole('button', { name: /create/i })).toBeDisabled()
+  })
+
+  it('shows the picked story as the scope target', () => {
+    render(
+      <CreateExperimentForm storyId="story-42" storyTitle="User can edit profile" />,
+      { wrapper: makeWrapper() },
+    )
+
+    expect(screen.getByText(/scoped to/i)).toHaveTextContent('User can edit profile')
   })
 })
