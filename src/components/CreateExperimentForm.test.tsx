@@ -295,6 +295,18 @@ describe('CreateExperimentForm (Test Card)', () => {
     expect(call).not.toHaveProperty('verdictLabels')
   })
 
+  it('renders an attribution link to the Lean Experiments practice under the Test Card heading, opening in a new tab', () => {
+    render(<CreateExperimentForm labelId="label-7" labelName="profile" />, { wrapper: makeWrapper() })
+
+    const link = screen.getByRole('link', { name: /lean experiments practice/i })
+    expect(link).toHaveAttribute('href', 'https://labspractices.com/practices/lean-experiments/')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(link.parentElement).toHaveTextContent(
+      /This Test Card follows the Lean Experiments practice from labspractices\.com/i,
+    )
+  })
+
   it('shows the default labels as placeholders on the custom-label inputs', async () => {
     const user = userEvent.setup()
 
