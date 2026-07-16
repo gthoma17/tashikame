@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { supabase } from '../lib/supabase'
-import { computeVerdict } from '../lib/experiments'
+import { computeVerdict, writeVerdictBack } from '../lib/experiments'
 import './Dashboard.css'
 
 type Experiment = {
@@ -11,6 +12,8 @@ type Experiment = {
   locked_threshold: number | null
   measured_value: number | null
 }
+
+type WriteBackState = 'idle' | 'loading' | 'done' | 'error'
 
 const STATUS_LABEL: Record<string, string> = {
   draft: 'Proposed',
@@ -31,6 +34,17 @@ export function Dashboard() {
     queryKey: ['experiments'],
     queryFn: fetchExperiments,
   })
+  const [writeBackStates, setWriteBackStates] = useState<Record<string, WriteBackState>>({})
+
+  async function handleWriteBack(experimentId: string) {
+    setWriteBackStates((s) => ({ ...s, [experimentId]: 'loading' }))
+    try {
+      await writeVerdictBack(experimentId)
+      setWriteBackStates((s) => ({ ...s, [experimentId]: 'done' }))
+    } catch {
+      setWriteBackStates((s) => ({ ...s, [experimentId]: 'error' }))
+    }
+  }
 
   if (isLoading) return null
 
@@ -55,6 +69,8 @@ export function Dashboard() {
             <th>Hypothesis</th>
             <th>Status</th>
             <th>Verdict</th>
+            <th>Consequence</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -65,6 +81,7 @@ export function Dashboard() {
               exp.measured_value != null
                 ? computeVerdict(exp.locked_threshold, exp.measured_value)
                 : null
+            const wbState = writeBackStates[exp.id] ?? 'idle'
             return (
               <tr key={exp.id}>
                 <td>{exp.hypothesis}</td>
@@ -75,6 +92,37 @@ export function Dashboard() {
                 </td>
                 <td>
                   {verdict && <span className={`verdict verdict--${verdict}`}>{verdict}</span>}
+                </td>
+                <td>
+                  {verdict && (
+                    wbState === 'idle' ? (
+                      <button className="writeback-btn" onClick={() => handleWriteBack(exp.id)}>
+                        Write back
+                      </button>
+                    ) : wbState === 'loading' ? (
+                      <span className="writeback-loading">Writing…</span>
+                    ) : wbState === 'done' ? (
+                      <span className="writeback-done">Written ✓</span>
+                    ) : (
+                      <>
+                        <span className="writeback-error">Error</span>
+                        <button className="writeback-btn" onClick={() => handleWriteBack(exp.id)}>
+                          Retry
+                        </button>
+                      </>
+                    )
+                  )}
+                </td>
+                <td>
+                  {exp.status === 'running' && (
+                    <Link
+                      to="/experiments/$id/conclude"
+                      params={{ id: exp.id }}
+                      className="dashboard-conclude-link"
+                    >
+                      Conclude
+                    </Link>
+                  )}
                 </td>
               </tr>
             )
