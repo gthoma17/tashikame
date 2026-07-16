@@ -7,9 +7,15 @@ import {
 import { IndexPage } from './routes/index'
 import { CreatePage } from './routes/create'
 import { ConcludeExperimentPage } from './routes/experiments/conclude'
+import { SiteHeader } from './components/SiteHeader'
 
 const rootRoute = createRootRoute({
-  component: Outlet,
+  component: () => (
+    <>
+      <SiteHeader />
+      <Outlet />
+    </>
+  ),
 })
 
 const indexRoute = createRoute({
