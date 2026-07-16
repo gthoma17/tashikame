@@ -8,6 +8,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:smoke": "vitest run src/lib/supabase.smoke.test.ts",
     "e2e": "playwright test"
   },
   "dependencies": {
