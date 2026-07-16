@@ -26,6 +26,19 @@ describe('Dashboard', () => {
     vi.clearAllMocks()
   })
 
+  it('renders experiments in a table', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: '1', hypothesis: 'Any hypothesis', status: 'running', result: null }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByRole('table')).toBeInTheDocument()
+  })
+
   it('shows each experiment with its name, status, and verdict when concluded', async () => {
     const experiments = [
       { id: '1', hypothesis: 'Adding banner increases signups', status: 'draft', result: null },

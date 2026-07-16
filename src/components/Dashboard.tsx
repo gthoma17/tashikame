@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import './Dashboard.css'
 
 type Experiment = {
   id: string
@@ -32,21 +33,43 @@ export function Dashboard() {
 
   if (!experiments?.length) {
     return (
-      <div>
+      <div className="dashboard-empty">
         <p>No experiments yet. Create your first experiment to get started.</p>
       </div>
     )
   }
 
   return (
-    <ul>
-      {experiments.map((exp) => (
-        <li key={exp.id}>
-          <span>{exp.hypothesis}</span>
-          <span>{STATUS_LABEL[exp.status] ?? exp.status}</span>
-          {exp.result && <span>{exp.result}</span>}
-        </li>
-      ))}
-    </ul>
+    <div className="dashboard">
+      <h1 className="dashboard-title">Experiments</h1>
+      <table className="dashboard-table">
+        <thead>
+          <tr>
+            <th>Hypothesis</th>
+            <th>Status</th>
+            <th>Verdict</th>
+          </tr>
+        </thead>
+        <tbody>
+          {experiments.map((exp) => (
+            <tr key={exp.id}>
+              <td>{exp.hypothesis}</td>
+              <td>
+                <span className={`status status--${exp.status}`}>
+                  {STATUS_LABEL[exp.status] ?? exp.status}
+                </span>
+              </td>
+              <td>
+                {exp.result && (
+                  <span className={`verdict verdict--${exp.result}`}>
+                    {exp.result}
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
