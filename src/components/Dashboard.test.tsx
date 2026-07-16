@@ -39,11 +39,11 @@ describe('Dashboard', () => {
     expect(await screen.findByRole('table')).toBeInTheDocument()
   })
 
-  it('shows each experiment with its name, status, and verdict when concluded', async () => {
+  it('shows each experiment with its name and status', async () => {
     const experiments = [
-      { id: '1', hypothesis: 'Adding banner increases signups', status: 'draft', result: null },
-      { id: '2', hypothesis: 'Shorter form reduces drop-off', status: 'running', result: null },
-      { id: '3', hypothesis: 'Social proof boosts trust', status: 'concluded', result: 'validated' },
+      { id: '1', hypothesis: 'Adding banner increases signups', status: 'draft', locked_threshold: null, measured_value: null },
+      { id: '2', hypothesis: 'Shorter form reduces drop-off', status: 'running', locked_threshold: null, measured_value: null },
+      { id: '3', hypothesis: 'Social proof boosts trust', status: 'concluded', locked_threshold: 8, measured_value: 12 },
     ]
     vi.mocked(supabase.from).mockReturnValue({
       select: vi.fn().mockResolvedValue({ data: experiments, error: null }),
@@ -54,7 +54,61 @@ describe('Dashboard', () => {
     expect(await screen.findByText('Adding banner increases signups')).toBeInTheDocument()
     expect(screen.getByText('Shorter form reduces drop-off')).toBeInTheDocument()
     expect(screen.getByText('Social proof boosts trust')).toBeInTheDocument()
-    expect(screen.getByText('validated')).toBeInTheDocument()
+  })
+
+  it('shows kill verdict when measured value is below the locked threshold', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: '1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 4.1 }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByText('kill')).toBeInTheDocument()
+  })
+
+  it('shows keep verdict when measured value exceeds the locked threshold', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: '1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 12 }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByText('keep')).toBeInTheDocument()
+  })
+
+  it('shows inconclusive verdict when measured value equals the locked threshold', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: '1', hypothesis: 'Banner test', status: 'concluded', locked_threshold: 8, measured_value: 8 }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    expect(await screen.findByText('inconclusive')).toBeInTheDocument()
+  })
+
+  it('shows no verdict for non-concluded experiments', async () => {
+    vi.mocked(supabase.from).mockReturnValue({
+      select: vi.fn().mockResolvedValue({
+        data: [{ id: '1', hypothesis: 'Banner test', status: 'running', locked_threshold: 8, measured_value: null }],
+        error: null,
+      }),
+    } as any)
+
+    render(<Dashboard />, { wrapper: makeWrapper() })
+
+    await screen.findByText('Banner test')
+    expect(screen.queryByText('kill')).not.toBeInTheDocument()
+    expect(screen.queryByText('keep')).not.toBeInTheDocument()
+    expect(screen.queryByText('inconclusive')).not.toBeInTheDocument()
   })
 
   it('shows empty state prompting to create first experiment when no experiments exist', async () => {
