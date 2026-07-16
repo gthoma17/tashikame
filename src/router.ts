@@ -5,6 +5,7 @@ import {
   Outlet,
 } from '@tanstack/react-router'
 import { IndexPage } from './routes/index'
+import { ConcludeExperimentPage } from './routes/experiments/conclude'
 
 const rootRoute = createRootRoute({
   component: Outlet,
@@ -16,7 +17,13 @@ const indexRoute = createRoute({
   component: IndexPage,
 })
 
-const routeTree = rootRoute.addChildren([indexRoute])
+const concludeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/experiments/$id/conclude',
+  component: ConcludeExperimentPage,
+})
+
+const routeTree = rootRoute.addChildren([indexRoute, concludeRoute])
 
 export const router = createRouter({ routeTree })
 
