@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { createExperiment } from '../lib/experiments'
+import { surfaceRiskiestAssumption } from '../lib/llm'
 import './CreateExperimentForm.css'
 
 type Props = {
@@ -15,10 +16,15 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
   const [threshold, setThreshold] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const mutation = useMutation({
+  const createMutation = useMutation({
     mutationFn: (input: { labelId: string; hypothesis: string; lockedThreshold: number }) =>
       createExperiment(input),
     onSuccess: () => navigate({ to: '/' }),
+  })
+
+  const surfaceMutation = useMutation({
+    mutationFn: (input: { labelId: string; labelName: string }) => surfaceRiskiestAssumption(input),
+    onSuccess: (data) => setHypothesis(data.assumption),
   })
 
   function handleSubmit(e: FormEvent) {
@@ -28,11 +34,16 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
       return
     }
     setError(null)
-    mutation.mutate({
+    createMutation.mutate({
       labelId: labelId!,
       hypothesis: hypothesis.trim(),
       lockedThreshold: Number(threshold),
     })
+  }
+
+  function handleSurface() {
+    if (!labelId || !labelName) return
+    surfaceMutation.mutate({ labelId, labelName })
   }
 
   return (
@@ -40,6 +51,19 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
       {labelName && (
         <p className="create-form__scope">
           Scoped to: <strong>{labelName}</strong>
+        </p>
+      )}
+      <button
+        type="button"
+        className="create-form__surface"
+        onClick={handleSurface}
+        disabled={labelId === null || surfaceMutation.isPending}
+      >
+        {surfaceMutation.isPending ? 'Surfacing…' : 'Surface the riskiest assumption'}
+      </button>
+      {surfaceMutation.isError && (
+        <p role="alert" className="create-form__error">
+          Could not surface an assumption. Please try again.
         </p>
       )}
       <label className="create-form__field">
@@ -66,7 +90,7 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
           {error}
         </p>
       )}
-      {mutation.isError && (
+      {createMutation.isError && (
         <p role="alert" className="create-form__error">
           Could not save the experiment. Please try again.
         </p>
@@ -74,9 +98,9 @@ export function CreateExperimentForm({ labelId, labelName }: Props) {
       <button
         type="submit"
         className="create-form__submit"
-        disabled={labelId === null || mutation.isPending}
+        disabled={labelId === null || createMutation.isPending}
       >
-        {mutation.isPending ? 'Creating…' : 'Create'}
+        {createMutation.isPending ? 'Creating…' : 'Create'}
       </button>
     </form>
   )
