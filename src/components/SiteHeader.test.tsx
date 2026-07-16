@@ -14,15 +14,15 @@ function renderWithRouter(ui: React.ReactNode) {
 }
 
 describe('SiteHeader', () => {
-  it('renders the Tashikame wordmark', async () => {
+  it('renders the Tashikani wordmark', async () => {
     renderWithRouter(<div>page</div>)
     expect(await screen.findByRole('banner')).toBeInTheDocument()
-    expect(screen.getByText('Tashikame')).toBeInTheDocument()
+    expect(screen.getByText('Tashikani')).toBeInTheDocument()
   })
 
   it('renders the mascot as an accessible image next to the wordmark', async () => {
     renderWithRouter(<div>page</div>)
-    const mascot = await screen.findByRole('img', { name: /tashikame mascot/i })
+    const mascot = await screen.findByRole('img', { name: /tashikani mascot/i })
     expect(mascot).toBeInTheDocument()
   })
 })
