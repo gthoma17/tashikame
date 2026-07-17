@@ -86,8 +86,12 @@ type Draft = {
   timeRequired: 1 | 2 | 3
 }
 
+function stripCodeFences(s: string): string {
+  return s.replace(/^\s*```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim()
+}
+
 function parseDraft(raw: string): Draft {
-  const parsed = JSON.parse(raw) as Record<string, unknown>
+  const parsed = JSON.parse(stripCodeFences(raw)) as Record<string, unknown>
   const str = (k: string) => {
     const v = parsed[k]
     if (typeof v !== 'string' || !v.trim()) throw new Error(`missing string field: ${k}`)
