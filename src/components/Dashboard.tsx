@@ -13,6 +13,7 @@ type ThresholdOverride = {
 
 type Experiment = {
   id: string
+  test_name: string | null
   hypothesis: string
   status: 'running' | 'concluded'
   locked_threshold: number | null
@@ -31,7 +32,7 @@ async function fetchExperiments(): Promise<Experiment[]> {
   const { data, error } = await supabase
     .from('experiments')
     .select(
-      'id, hypothesis, status, locked_threshold, measured_value, experiment_threshold_overrides(old_value, new_value, created_at)',
+      'id, test_name, hypothesis, status, locked_threshold, measured_value, experiment_threshold_overrides(old_value, new_value, created_at)',
     )
   if (error) throw error
   return data ?? []
@@ -95,7 +96,7 @@ export function Dashboard() {
       <table className="dashboard-table">
         <thead>
           <tr>
-            <th>Hypothesis</th>
+            <th>Experiment</th>
             <th>Status</th>
             <th>Threshold</th>
             <th>Verdict</th>
@@ -118,7 +119,7 @@ export function Dashboard() {
               : null
             return (
               <tr key={exp.id}>
-                <td>{exp.hypothesis}</td>
+                <td>{exp.test_name ?? exp.hypothesis}</td>
                 <td>
                   <span className={`status status--${exp.status}`}>
                     {STATUS_LABEL[exp.status] ?? exp.status}
