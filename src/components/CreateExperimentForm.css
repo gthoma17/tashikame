@@ -4,7 +4,7 @@
   gap: var(--space-4);
   margin-top: var(--space-6);
   padding: var(--space-6);
-  background: #F2E7CC;
+  background: #F5F3FF;
   border-radius: var(--radius);
   color: var(--color-text-primary);
 }
@@ -82,7 +82,7 @@
   font-weight: 600;
   font-size: 1rem;
   color: var(--color-text-primary);
-  background: #F2E7CC;
+  background: #F5F3FF;
   align-self: flex-start;
   padding: 2px var(--space-2);
   border-radius: 4px;
